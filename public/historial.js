@@ -516,40 +516,52 @@ function generarHojaAuditoria(auditoria) {
 function initializeModals() {
   // Modal de eliminar
   const modalEliminar = document.getElementById('modal-eliminar');
-  const closeEliminar = modalEliminar.querySelector('.modal-close');
-  const btnConfirmar = document.getElementById('btn-confirmar-eliminar');
-  const btnCancelar = document.getElementById('btn-cancelar-eliminar');
+  if (modalEliminar) {
+    const closeEliminar = modalEliminar.querySelector('.modal-close');
+    const btnConfirmar = document.getElementById('btn-confirmar-eliminar');
+    const btnCancelar = document.getElementById('btn-cancelar-eliminar');
 
-  closeEliminar.addEventListener('click', () => {
-    modalEliminar.classList.remove('show');
-    auditoriaAEliminar = null;
-  });
-
-  btnCancelar.addEventListener('click', () => {
-    modalEliminar.classList.remove('show');
-    auditoriaAEliminar = null;
-  });
-
-  btnConfirmar.addEventListener('click', eliminarAuditoria);
-
-  modalEliminar.addEventListener('click', (e) => {
-    if (e.target === modalEliminar) {
-      modalEliminar.classList.remove('show');
-      auditoriaAEliminar = null;
+    if (closeEliminar) {
+      closeEliminar.addEventListener('click', () => {
+        modalEliminar.classList.remove('show');
+        auditoriaAEliminar = null;
+      });
     }
-  });
+
+    if (btnCancelar) {
+      btnCancelar.addEventListener('click', () => {
+        modalEliminar.classList.remove('show');
+        auditoriaAEliminar = null;
+      });
+    }
+
+    if (btnConfirmar) {
+      btnConfirmar.addEventListener('click', eliminarAuditoria);
+    }
+
+    modalEliminar.addEventListener('click', (e) => {
+      if (e.target === modalEliminar) {
+        modalEliminar.classList.remove('show');
+        auditoriaAEliminar = null;
+      }
+    });
+  }
 
   // Modal de detalles
   const modalDetalles = document.getElementById('modal-detalles');
-  const closeDetalles = modalDetalles.querySelector('.modal-close');
+  if (modalDetalles) {
+    const closeDetalles = modalDetalles.querySelector('.modal-close');
 
-  closeDetalles.addEventListener('click', cerrarModalDetalles);
-
-  modalDetalles.addEventListener('click', (e) => {
-    if (e.target === modalDetalles) {
-      cerrarModalDetalles();
+    if (closeDetalles) {
+      closeDetalles.addEventListener('click', cerrarModalDetalles);
     }
-  });
+
+    modalDetalles.addEventListener('click', (e) => {
+      if (e.target === modalDetalles) {
+        cerrarModalDetalles();
+      }
+    });
+  }
 }
 
 // Confirmar eliminación
