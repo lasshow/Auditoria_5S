@@ -70,7 +70,11 @@ app.get('/api/auth/check', (req, res) => {
 
 // Variable para la base de datos
 let db;
-const DB_PATH = path.join(__dirname, 'auditorias.db');
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR);
+}
+const DB_PATH = path.join(DATA_DIR, 'auditorias.db');
 
 // ==================== UTILIDADES DE BASE DE DATOS ====================
 

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: auditoria_5s_app
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mapea la carpeta 'data' local del servidor a la carpeta 'data' dentro del contenedor
+      # ¡ESTO ES LO QUE GARANTIZA QUE NO PIERDAS DATOS AL REINICIAR!
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+    # Configuración de logging para no llenar el disco del servidor
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
