@@ -1984,8 +1984,28 @@ body.dark-mode .hoja-fecha-impresion {
 
 /* ==================== ESTILOS DE IMPRESIÓN PARA HOJA ==================== */
 @media print {
-  /* Ocultar todo excepto el contenido de la hoja */
-  body > *:not(.modal) {
+  /* Ocultar elementos que no queremos imprimir */
+  body {
+    background: white !important;
+  }
+
+  /* Ocultar header, nav, filtros, tablas, estadísticas, paginación */
+  .header-pdf,
+  .page-title,
+  .stats-container,
+  .filters-container,
+  .table-container,
+  .pagination,
+  .bottom-nav,
+  .kpi-filters,
+  .kpi-summary,
+  .kpi-chart-container,
+  .kpi-table-container,
+  .kpi-ranking,
+  .admin-section,
+  .parcela-section-pdf,
+  .audit-table,
+  .form-actions {
     display: none !important;
   }
 
@@ -1994,8 +2014,14 @@ body.dark-mode .hoja-fecha-impresion {
     display: none !important;
   }
 
-  /* Mostrar y posicionar correctamente el modal activo */
-  .modal.show {
+  /* Ocultar modales de login y eliminar (no son para imprimir) */
+  #modal-login,
+  #modal-eliminar {
+    display: none !important;
+  }
+
+  /* Mostrar y posicionar correctamente el modal de detalles */
+  #modal-detalles.show {
     display: block !important;
     position: static !important;
     background: white !important;
@@ -2006,7 +2032,7 @@ body.dark-mode .hoja-fecha-impresion {
     overflow: visible !important;
   }
 
-  .modal.show .modal-content {
+  #modal-detalles.show .modal-content {
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2020,7 +2046,7 @@ body.dark-mode .hoja-fecha-impresion {
     background: white !important;
   }
 
-  .modal-fullscreen.show .modal-hoja-auditoria {
+  #modal-detalles.show .modal-hoja-auditoria {
     height: auto !important;
     overflow: visible !important;
     padding: 0 !important;
@@ -2040,10 +2066,20 @@ body.dark-mode .hoja-fecha-impresion {
     max-width: 100%;
     padding: 10px;
     margin: 0;
+    background: white !important;
+    color: black !important;
   }
 
   .hoja-auditoria * {
     visibility: visible !important;
+  }
+
+  /* Asegurar que el container sea visible durante la impresión */
+  .container {
+    display: block !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   .hoja-header {
