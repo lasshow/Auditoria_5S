@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Auditorías - GHI Smart Furnaces</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- ENCABEZADO -->
+    <header class="header-pdf">
+      <div class="header-left">
+        <div class="logo-box">AUDITORIA DE 5S GHI</div>
+      </div>
+      <div class="header-right-info">
+        <strong>GHI Smart Furnaces</strong><br>
+        Barrio de Aperribai, 4<br>
+        48960 Galdakao, Biscay
+        <button type="button" id="theme-toggle" class="theme-toggle" title="Cambiar tema">
+          <span class="icon-sun">&#9728;</span>
+          <span class="icon-moon">&#9790;</span>
+        </button>
+      </div>
+    </header>
+
+    <h1 class="page-title">Historial de Auditorías</h1>
+
+    <!-- ESTADÍSTICAS -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">Auditorías Totales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-semana">0</div>
+        <div class="stat-label">Última Semana</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-pendientes">0</div>
+        <div class="stat-label">Acciones Pendientes</div>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="filtro-parcela">Parcela:</label>
+        <select id="filtro-parcela">
+          <option value="">Todas las parcelas</option>
+          <option value="Parcela horno grande 1">Parcela horno grande 1</option>
+          <option value="Parcela horno grande 2">Parcela horno grande 2</option>
+          <option value="Parcela horno grande 3 (FRB)">Parcela horno grande 3 (FRB)</option>
+          <option value="Parcela horno pequeño 1">Parcela horno pequeño 1</option>
+          <option value="Dojo de formación">Dojo de formación</option>
+          <option value="Af. Pack & Build">Af. Pack & Build</option>
+          <option value="Af. Ventiladores">Af. Ventiladores</option>
+          <option value="Parcela BEAS">Parcela BEAS</option>
+          <option value="AF1">AF1</option>
+          <option value="Patio exterior">Patio exterior</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filtro-desde">Desde:</label>
+        <input type="date" id="filtro-desde">
+      </div>
+      <div class="filter-group">
+        <label for="filtro-hasta">Hasta:</label>
+        <input type="date" id="filtro-hasta">
+      </div>
+      <button class="btn btn-primary btn-small" id="btn-filtrar">Filtrar</button>
+      <button class="btn btn-secondary btn-small" id="btn-limpiar-filtros">Limpiar</button>
+    </div>
+
+    <!-- TABLA DE AUDITORÍAS -->
+    <div class="table-container">
+      <table class="auditorias-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Parcela</th>
+            <th>Auditor</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body">
+          <tr>
+            <td colspan="5" class="no-data">Cargando auditorías...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Contenedor para detalles expandibles -->
+      <div id="detalles-container"></div>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination" id="paginacion">
+    </div>
+
+    <!-- NAVEGACIÓN -->
+    <nav class="bottom-nav">
+      <a href="/" class="nav-link">Nueva Auditoría</a>
+      <a href="/historial" class="nav-link active">Historial</a>
+      <a href="/kpi" class="nav-link">KPIs</a>
+    </nav>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN -->
+  <div id="modal-eliminar" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h3>Confirmar Eliminación</h3>
+      <p>¿Estás seguro de que quieres eliminar esta auditoría? Esta acción no se puede deshacer.</p>
+      <div class="modal-actions">
+        <button id="btn-confirmar-eliminar" class="btn btn-danger">Eliminar</button>
+        <button id="btn-cancelar-eliminar" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE HOJA DE AUDITORÍA IMPRIMIBLE -->
+  <div id="modal-detalles" class="modal modal-fullscreen">
+    <div class="modal-content modal-hoja-auditoria">
+      <div class="modal-header-actions no-print">
+        <button class="btn btn-primary" onclick="imprimirHoja()">Imprimir Hoja</button>
+        <button class="btn btn-secondary" onclick="cerrarModalDetalles()">Cerrar</button>
+      </div>
+      <div id="hoja-auditoria" class="hoja-auditoria">
+        <!-- Contenido de la hoja de auditoría se genera dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <script src="historial.js"></script>
+</body>
+</html>

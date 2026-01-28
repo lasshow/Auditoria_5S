@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPI Auditorías 5S - GHI Smart Furnaces</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- ENCABEZADO -->
+    <header class="header-pdf">
+      <div class="header-left">
+        <div class="logo-box">KPI AUDITORÍAS 5S</div>
+      </div>
+      <div class="header-center">
+        <h2>Indicadores Semanales por Parcela</h2>
+      </div>
+      <div class="header-right-info">
+        <strong>GHI Smart Furnaces</strong><br>
+        Auditorías: Jueves<br>
+        Limpieza: Viernes
+        <button type="button" id="theme-toggle" class="theme-toggle" title="Cambiar tema">
+          <span class="icon-sun">&#9728;</span>
+          <span class="icon-moon">&#9790;</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- FILTROS -->
+    <section class="kpi-filters">
+      <div class="filter-group">
+        <label>Parcela:</label>
+        <select id="filtro-parcela">
+          <option value="">Todas las parcelas</option>
+          <option value="Parcela horno grande 1">Parcela horno grande 1</option>
+          <option value="Parcela horno grande 2">Parcela horno grande 2</option>
+          <option value="Parcela horno grande 3 (FRB)">Parcela horno grande 3 (FRB)</option>
+          <option value="Parcela horno pequeño 1">Parcela horno pequeño 1</option>
+          <option value="Dojo de formación">Dojo de formación</option>
+          <option value="Af. Pack & Build">Af. Pack & Build</option>
+          <option value="Af. Ventiladores">Af. Ventiladores</option>
+          <option value="Parcela BEAS">Parcela BEAS</option>
+          <option value="AF1">AF1</option>
+          <option value="Patio exterior">Patio exterior</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Últimas semanas:</label>
+        <select id="filtro-semanas">
+          <option value="4">4 semanas</option>
+          <option value="8" selected>8 semanas</option>
+          <option value="12">12 semanas</option>
+          <option value="24">24 semanas</option>
+          <option value="52">1 año</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="cargarKPIs()">Actualizar</button>
+    </section>
+
+    <!-- RESUMEN -->
+    <section class="kpi-summary">
+      <div class="kpi-card">
+        <div class="kpi-value" id="total-auditorias">0</div>
+        <div class="kpi-label">Total Auditorías</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" id="total-innecesarios">0</div>
+        <div class="kpi-label">Total Innecesarios</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" id="promedio-semanal">0</div>
+        <div class="kpi-label">Promedio Semanal</div>
+      </div>
+      <div class="kpi-card tendencia">
+        <div class="kpi-value" id="tendencia">-</div>
+        <div class="kpi-label">Tendencia</div>
+      </div>
+    </section>
+
+    <!-- GRÁFICO PRINCIPAL -->
+    <section class="kpi-chart-container">
+      <h3>Evolución Semanal de Innecesarios</h3>
+      <canvas id="chart-evolucion"></canvas>
+    </section>
+
+    <!-- GRÁFICO POR PARCELA -->
+    <section class="kpi-chart-container">
+      <h3>Comparativa por Parcela (Total Período)</h3>
+      <canvas id="chart-parcelas"></canvas>
+    </section>
+
+    <!-- TABLA DETALLADA -->
+    <section class="kpi-table-container">
+      <h3>Detalle Semanal</h3>
+      <div class="table-scroll">
+        <table class="kpi-table" id="tabla-semanal">
+          <thead>
+            <tr>
+              <th>Semana</th>
+              <th>Fecha</th>
+              <th>Parcela</th>
+              <th>Innecesarios Desconocidos</th>
+              <th>Innecesarios No FullKit</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body">
+            <!-- Se llena dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RANKING DE PARCELAS -->
+    <section class="kpi-ranking">
+      <h3>Ranking de Parcelas (Menos incidencias = Mejor)</h3>
+      <div id="ranking-container" class="ranking-list">
+        <!-- Se llena dinámicamente -->
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN -->
+    <nav class="bottom-nav">
+      <a href="/" class="nav-link">Nueva Auditoría</a>
+      <a href="/historial" class="nav-link">Historial</a>
+      <a href="/kpi" class="nav-link active">KPIs</a>
+    </nav>
+  </div>
+
+  <script src="kpi.js"></script>
+</body>
+</html>

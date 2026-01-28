@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+
+# Base de datos local (contiene datos sensibles)
+auditorias.db
+
+# Archivos temporales
+*.log
+.DS_Store
+Thumbs.db
+tmpclaude-*
+
+# Variables de entorno
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema
+*.tmp
+*.temp

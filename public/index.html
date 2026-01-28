@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría 5S - GHI Smart Furnaces</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- ENCABEZADO -->
+    <header class="header-pdf">
+      <div class="header-left">
+        <div class="logo-box">AUDITORIA DE 5S GHI</div>
+      </div>
+      <div class="header-center">
+        <label>FECHA:</label>
+        <input type="date" id="fecha" name="fecha" required>
+      </div>
+      <div class="header-right-info">
+        <strong>GHI Smart Furnaces</strong><br>
+        Barrio de Aperribai, 4<br>
+        48960 Galdakao, Biscay
+        <button type="button" id="theme-toggle" class="theme-toggle" title="Cambiar tema">
+          <span class="icon-sun">&#9728;</span>
+          <span class="icon-moon">&#9790;</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SELECTOR DE PARCELA CON MAPA -->
+    <section class="parcela-section-pdf">
+      <div class="mapa-container-pdf">
+        <h3>PARCELA:</h3>
+        <svg id="mapa-parcelas" viewBox="0 0 700 450" class="mapa-svg">
+          <!-- Fondo general de la nave -->
+          <rect x="0" y="0" width="700" height="450" fill="#e8e8e8" stroke="#999" stroke-width="2"/>
+
+          <!-- DOJO DE FORMACIÓN -->
+          <g class="parcela-area" data-parcela="Dojo de formación">
+            <rect x="10" y="310" width="130" height="90" fill="#b0b0b0" stroke="#c00" stroke-width="3" stroke-dasharray="8,4"/>
+            <text x="75" y="350" text-anchor="middle" class="parcela-label-white">Dojo de</text>
+            <text x="75" y="370" text-anchor="middle" class="parcela-label-white">formación</text>
+          </g>
+
+          <!-- PARCELA HORNO PEQUEÑO 1 -->
+          <g class="parcela-area" data-parcela="Parcela horno pequeño 1">
+            <rect x="150" y="310" width="140" height="90" fill="#f5d742" stroke="#c9a800" stroke-width="2"/>
+            <text x="220" y="350" text-anchor="middle" class="parcela-label-dark">Parcela horno</text>
+            <text x="220" y="370" text-anchor="middle" class="parcela-label-dark">Pequeño 1</text>
+          </g>
+
+          <!-- AF. VENTILADORES -->
+          <g class="parcela-area" data-parcela="Af. Ventiladores">
+            <rect x="95" y="130" width="90" height="70" fill="#7ecef4" stroke="#2196f3" stroke-width="2"/>
+            <text x="140" y="160" text-anchor="middle" class="parcela-label-dark">Af.</text>
+            <text x="140" y="178" text-anchor="middle" class="parcela-label-dark">Ventiladores</text>
+          </g>
+
+          <!-- PARCELA BEAS -->
+          <g class="parcela-area" data-parcela="Parcela BEAS">
+            <rect x="95" y="210" width="90" height="70" fill="#ff69b4" stroke="#d63384" stroke-width="2"/>
+            <text x="140" y="250" text-anchor="middle" class="parcela-label-white">Parcela</text>
+            <text x="140" y="268" text-anchor="middle" class="parcela-label-white">BEAS</text>
+          </g>
+
+          <!-- AF. PACK & BUILD -->
+          <g class="parcela-area" data-parcela="Af. Pack & Build">
+            <rect x="195" y="80" width="55" height="200" fill="#9966cc" stroke="#6a3d9a" stroke-width="2"/>
+            <text x="222" y="170" text-anchor="middle" class="parcela-label-white" transform="rotate(-90, 222, 170)">Af. Pack&Build</text>
+          </g>
+
+          <!-- PASILLO -->
+          <rect x="260" y="60" width="50" height="240" fill="#f5f5dc" stroke="#ccc" stroke-width="1"/>
+          <text x="285" y="180" text-anchor="middle" class="pasillo-label" transform="rotate(-90, 285, 180)">Pasillo</text>
+
+          <!-- PARCELA HORNO GRANDE 1 -->
+          <g class="parcela-area" data-parcela="Parcela horno grande 1">
+            <rect x="320" y="10" width="200" height="110" fill="#d32f2f" stroke="#8B0000" stroke-width="3"/>
+            <text x="420" y="55" text-anchor="middle" class="parcela-label-white">Parcela horno</text>
+            <text x="420" y="80" text-anchor="middle" class="parcela-label-white">grande 1</text>
+          </g>
+
+          <!-- PARCELA HORNO GRANDE 2 -->
+          <g class="parcela-area" data-parcela="Parcela horno grande 2">
+            <rect x="320" y="130" width="200" height="100" fill="#5c85d6" stroke="#1a53a5" stroke-width="3"/>
+            <text x="420" y="175" text-anchor="middle" class="parcela-label-white">Parcela horno</text>
+            <text x="420" y="198" text-anchor="middle" class="parcela-label-white">grande 2</text>
+          </g>
+
+          <!-- PARCELA HORNO GRANDE 3 (FRB) -->
+          <g class="parcela-area" data-parcela="Parcela horno grande 3 (FRB)">
+            <rect x="320" y="240" width="200" height="100" fill="#4caf50" stroke="#2e7d32" stroke-width="3"/>
+            <text x="420" y="280" text-anchor="middle" class="parcela-label-white">Parcela horno</text>
+            <text x="420" y="305" text-anchor="middle" class="parcela-label-white">grande 3 (FRB)</text>
+          </g>
+
+          <!-- Zona triangular amarilla -->
+          <polygon points="530,10 690,10 690,200 530,120" fill="#fffacd" stroke="#ccc"/>
+
+          <!-- ALMACÉN SAT -->
+          <rect x="430" y="360" width="100" height="50" fill="#e0e0e0" stroke="#888"/>
+          <text x="480" y="390" text-anchor="middle" class="almacen-label-small">ALMACEN SAT</text>
+
+          <rect x="540" y="360" width="120" height="50" fill="#e0e0e0" stroke="#888"/>
+          <text x="600" y="390" text-anchor="middle" class="almacen-label-small">ALMACEN LARGA</text>
+
+          <!-- AF1 -->
+          <g class="parcela-area" data-parcela="AF1">
+            <rect x="580" y="410" width="100" height="35" fill="#ff9966" stroke="#e65c00" stroke-width="2"/>
+            <text x="630" y="433" text-anchor="middle" class="parcela-label-dark">AF1</text>
+          </g>
+
+          <!-- PATIO EXTERIOR (zona derecha del mapa) -->
+          <g class="parcela-area" data-parcela="Patio exterior">
+            <polygon points="530,120 690,200 690,350 530,350" fill="transparent" stroke="#c00" stroke-width="3"/>
+            <text x="610" y="260" text-anchor="middle" class="parcela-label-dark" font-weight="bold">Patio</text>
+            <text x="610" y="280" text-anchor="middle" class="parcela-label-dark" font-weight="bold">exterior</text>
+          </g>
+
+          <text x="350" y="440" text-anchor="middle" class="leyenda">Haz clic en una parcela para seleccionarla</text>
+        </svg>
+      </div>
+
+      <div class="parcela-selector-pdf">
+        <h3>SEÑALAR LA PARCELA INSPECCIONADA:</h3>
+        <div class="parcela-list">
+          <label class="parcela-radio color-rojo"><input type="radio" name="parcela" value="Parcela horno grande 1"> Parcela horno grande 1</label>
+          <label class="parcela-radio color-azul"><input type="radio" name="parcela" value="Parcela horno grande 2"> Parcela horno grande 2</label>
+          <label class="parcela-radio color-verde"><input type="radio" name="parcela" value="Parcela horno grande 3 (FRB)"> Parcela horno grande 3 (FRB)</label>
+          <label class="parcela-radio color-amarillo"><input type="radio" name="parcela" value="Parcela horno pequeño 1"> Parcela horno pequeño 1</label>
+          <label class="parcela-radio color-gris"><input type="radio" name="parcela" value="Dojo de formación"> Dojo de formación</label>
+          <label class="parcela-radio color-morado"><input type="radio" name="parcela" value="Af. Pack & Build"> Af. Pack & Build</label>
+          <label class="parcela-radio color-celeste"><input type="radio" name="parcela" value="Af. Ventiladores"> Af. Ventiladores</label>
+          <label class="parcela-radio color-rosa"><input type="radio" name="parcela" value="Parcela BEAS"> Parcela BEAS</label>
+          <label class="parcela-radio color-naranja"><input type="radio" name="parcela" value="AF1"> AF1</label>
+          <label class="parcela-radio color-marron"><input type="radio" name="parcela" value="Patio exterior"> Patio exterior</label>
+        </div>
+        <div class="auditor-field-pdf">
+          <label>Auditor:</label>
+          <input type="text" id="auditor" name="auditor" placeholder="Nombre del auditor">
+        </div>
+      </div>
+    </section>
+
+    <!-- FORMULARIO DE AUDITORÍA -->
+    <form id="auditoria-form">
+
+      <!-- ========== SECCIÓN 1: CLASIFICACIÓN ========== -->
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th class="header-red" colspan="2">1 - CLASIFICACIÓN (Eliminar del espacio de trabajo lo innecesario)</th>
+            <th class="header-red-dark" colspan="2">5 - MANTENIMIENTO (Actuar mediante acciones de corrección o de mejora continua para conseguir los puntos del 1 al 4)</th>
+          </tr>
+          <tr>
+            <th class="subheader" colspan="2">Preguntas de auditoría</th>
+            <th class="subheader" colspan="2">Acciones que resultan de las preguntas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Bloque 1: Innecesarios desconocidos -->
+          <tr>
+            <td class="question-cell">
+              Nº de innecesarios que NO sé lo que son (marcar cada uno de ellos en campo con una pegatina roja)
+            </td>
+            <td class="input-cell">
+              <span id="contador-desconocidos" class="contador-innecesarios">0</span>
+              <button type="button" class="btn-add-innecesario" onclick="agregarInnecesario('desconocidos')" title="Añadir innecesario">+</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Identificar cada innecesario y decidir si se tira o se almacena</td>
+          </tr>
+          <!-- Contenedor para líneas dinámicas de innecesarios desconocidos -->
+          <tr id="desglose-desconocidos-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Desglose de innecesarios:</div>
+              <div id="desglose-desconocidos" class="desglose-items"></div>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada innecesario:</div>
+              <div id="acciones-desconocidos" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell hint" colspan="4">
+              <div>Listado o información adicional si procede</div>
+              <textarea id="listado_desconocidos" rows="3" class="full-textarea" placeholder="Detallar los elementos encontrados..."></textarea>
+            </td>
+          </tr>
+          <!-- Bloque 2: No pertenecen a FullKit -->
+          <tr>
+            <td class="question-cell">
+              Nº de innecesarios que NO pertenecen al FullKit del momento actual del montaje (marcar cada uno de ellos en campo con una pegatina verde)
+            </td>
+            <td class="input-cell">
+              <span id="contador-nofullkit" class="contador-innecesarios">0</span>
+              <button type="button" class="btn-add-innecesario" onclick="agregarInnecesario('nofullkit')" title="Añadir innecesario">+</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Recoger y llevar a baldas o a almacén</td>
+          </tr>
+          <!-- Contenedor para líneas dinámicas de innecesarios no fullkit -->
+          <tr id="desglose-nofullkit-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Desglose de innecesarios:</div>
+              <div id="desglose-nofullkit" class="desglose-items"></div>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada innecesario:</div>
+              <div id="acciones-nofullkit" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell hint" colspan="4">
+              <div>Listado o información adicional si procede</div>
+              <textarea id="listado_no_fullkit" rows="3" class="full-textarea" placeholder="Detallar los elementos encontrados..."></textarea>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== SECCIÓN 2: ORDEN ========== -->
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th class="header-red" colspan="2">2 - ORDEN (Cada cosa en su lugar y un lugar para cada cosa)</th>
+            <th class="header-red-dark" colspan="2">5 - MANTENIMIENTO (Actuar mediante acciones de corrección o de mejora continua para conseguir los puntos del 1 al 4)</th>
+          </tr>
+          <tr>
+            <th class="subheader" colspan="2">Preguntas de auditoría</th>
+            <th class="subheader" colspan="2">Acciones que resultan de las preguntas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="question-cell">¿Hay herramienta fuera de su ubicación?</td>
+            <td class="check-cell">
+              <select id="herramienta_fuera" class="select-sino select-orden-trigger" data-orden="herramienta">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Recoger e inspeccionar</td>
+          </tr>
+          <!-- Desglose herramienta -->
+          <tr id="desglose-herramienta-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar herramientas encontradas:</div>
+              <div id="desglose-herramienta" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaOrden('herramienta')">+ Añadir herramienta</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-herramienta" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Hay eslingas, cadenas, grilletes fuera de sus perchas?</td>
+            <td class="check-cell">
+              <select id="eslingas_fuera" class="select-sino select-orden-trigger" data-orden="eslingas">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Recoger, inspeccionar visualmente en busca de defectos y ubicar en sus perchas.</td>
+          </tr>
+          <!-- Desglose eslingas -->
+          <tr id="desglose-eslingas-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar elementos encontrados:</div>
+              <div id="desglose-eslingas" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaOrden('eslingas')">+ Añadir elemento</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-eslingas" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Hay máquinas (máq. de soldar, de flushing, taladro magnético, máq. de apriete con control de par, pantallas de soldadura, enanos de hornos, etc.) fuera de su lugar?</td>
+            <td class="check-cell">
+              <select id="maquinas_fuera" class="select-sino select-orden-trigger" data-orden="maquinas">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Recoger e inspeccionar</td>
+          </tr>
+          <!-- Desglose máquinas -->
+          <tr id="desglose-maquinas-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar máquinas encontradas:</div>
+              <div id="desglose-maquinas" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaOrden('maquinas')">+ Añadir máquina</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-maquinas" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Hay ropa o EPIS fuera de su lugar?</td>
+            <td class="check-cell">
+              <select id="ropa_epis_fuera" class="select-sino select-orden-trigger" data-orden="ropa">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Recoger, identificar, colocar en un perchero durante una semana y tirar</td>
+          </tr>
+          <!-- Desglose ropa/EPIS -->
+          <tr id="desglose-ropa-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar ropa/EPIS encontrados:</div>
+              <div id="desglose-ropa" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaOrden('ropa')">+ Añadir elemento</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-ropa" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Hay un lugar donde guardar cada una de las cosas que se han encontrado fuera de su ubicación?</td>
+            <td class="check-cell">
+              <select id="lugar_guardar" class="select-sino select-orden-trigger" data-orden="lugar" data-invertir="true">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Crear lugares para guardar cada cosa que no tiene dónde ser guardada</td>
+          </tr>
+          <!-- Desglose lugar -->
+          <tr id="desglose-lugar-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar elementos sin lugar:</div>
+              <div id="desglose-lugar" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaOrden('lugar')">+ Añadir elemento</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-lugar" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell hint" colspan="4">
+              <div>Detallar cuáles</div>
+              <textarea id="orden_detalle" rows="3" class="full-textarea" placeholder="Detallar..."></textarea>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== SECCIÓN 3: LIMPIEZA ========== -->
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th class="header-red" colspan="2">3 - LIMPIEZA (Gestionar los residuos. Limpieza = inspección)</th>
+            <th class="header-red-dark" colspan="2">5 - MANTENIMIENTO (Actuar mediante acciones de corrección o de mejora continua para conseguir los puntos del 1 al 4)</th>
+          </tr>
+          <tr>
+            <th class="subheader" colspan="2">Preguntas de auditoría</th>
+            <th class="subheader" colspan="2">Acciones que resultan de las preguntas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="question-cell">¿Está el área sucia (polvo, basura)?</td>
+            <td class="check-cell">
+              <select id="area_sucia" class="select-sino select-limpieza-trigger" data-limpieza="suciedad">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Recoger y desechar residuos. Barrer.</td>
+          </tr>
+          <!-- Desglose suciedad -->
+          <tr id="desglose-suciedad-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar tipos de suciedad:</div>
+              <div id="desglose-suciedad" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaLimpieza('suciedad')">+ Añadir elemento</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-suciedad" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Está el área libre de residuos (pallets, restos de embalajes, aceites, bidones, botes, etc.)?</td>
+            <td class="check-cell">
+              <select id="area_residuos" class="select-sino select-limpieza-trigger" data-limpieza="residuos" data-invertir="true">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Recoger los residuos y desecharlos. En el caso de aceites llevar al lugar de almacén de aceites de pruebas o desecharlas siguiendo instrucciones de PRL.</td>
+          </tr>
+          <!-- Desglose residuos -->
+          <tr id="desglose-residuos-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar residuos encontrados:</div>
+              <div id="desglose-residuos" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaLimpieza('residuos')">+ Añadir residuo</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada residuo:</div>
+              <div id="acciones-residuos" class="desglose-items"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== SECCIÓN 4: INSPECCIÓN VISUAL ========== -->
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th class="header-red" colspan="2">4 - INSPECCIÓN VISUAL (Prevenir el desorden, los desperfectos. Señalizar, establecer normas y procedimientos)</th>
+            <th class="header-red-dark" colspan="2">5 - MANTENIMIENTO (Actuar mediante acciones de corrección o de mejora continua para conseguir los puntos del 1 al 4)</th>
+          </tr>
+          <tr>
+            <th class="subheader" colspan="2">Preguntas de auditoría</th>
+            <th class="subheader" colspan="2">Acciones que resultan de las preguntas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="question-cell">¿Todas las salidas de gas están precintadas?</td>
+            <td class="check-cell">
+              <select id="salidas_gas_precintadas" class="select-sino select-inspeccion-trigger" data-inspeccion="gas">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Precintar de inmediato.</td>
+          </tr>
+          <!-- Desglose gas -->
+          <tr id="desglose-gas-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar salidas sin precintar:</div>
+              <div id="desglose-gas" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaInspeccion('gas')">+ Añadir salida</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-gas" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Todos los riesgos están identificados en carteles?</td>
+            <td class="check-cell">
+              <select id="riesgos_carteles" class="select-sino select-inspeccion-trigger" data-inspeccion="carteles">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Indicar a Naroa para encargar la compra de carteles.</td>
+          </tr>
+          <!-- Desglose carteles -->
+          <tr id="desglose-carteles-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar riesgos sin identificar:</div>
+              <div id="desglose-carteles" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaInspeccion('carteles')">+ Añadir riesgo</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-carteles" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Están correctamente delimitadas las zonas de trabajo?</td>
+            <td class="check-cell">
+              <select id="zonas_delimitadas" class="select-sino select-inspeccion-trigger" data-inspeccion="zonas">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Delimitar zonas correctamente.</td>
+          </tr>
+          <!-- Desglose zonas -->
+          <tr id="desglose-zonas-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar zonas sin delimitar:</div>
+              <div id="desglose-zonas" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaInspeccion('zonas')">+ Añadir zona</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-zonas" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Los cuadros eléctricos están cerrados y no presentan roturas?</td>
+            <td class="check-cell">
+              <select id="cuadros_electricos_ok" class="select-sino select-inspeccion-trigger" data-inspeccion="electricos">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Cerrar/reparar cuadros eléctricos.</td>
+          </tr>
+          <!-- Desglose eléctricos -->
+          <tr id="desglose-electricos-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar problemas en cuadros:</div>
+              <div id="desglose-electricos" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaInspeccion('electricos')">+ Añadir problema</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-electricos" class="desglose-items"></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="question-cell">¿Las tomas de aire comprimido están en buen estado?</td>
+            <td class="check-cell">
+              <select id="aire_comprimido_ok" class="select-sino select-inspeccion-trigger" data-inspeccion="aire">
+                <option value="">-</option>
+                <option value="si">SI</option>
+                <option value="no">NO</option>
+              </select>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="action-cell">Reparar tomas de aire comprimido.</td>
+          </tr>
+          <!-- Desglose aire -->
+          <tr id="desglose-aire-row" class="desglose-row" style="display: none;">
+            <td colspan="2" class="desglose-container">
+              <div class="desglose-header">Especificar tomas en mal estado:</div>
+              <div id="desglose-aire" class="desglose-items"></div>
+              <button type="button" class="btn-add-item" onclick="agregarLineaInspeccion('aire')">+ Añadir toma</button>
+            </td>
+            <td class="arrow-cell">➜</td>
+            <td class="acciones-container">
+              <div class="desglose-header">Acciones para cada elemento:</div>
+              <div id="acciones-aire" class="desglose-items"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="form-actions">
+        <button type="button" id="btn-limpiar" class="btn btn-secondary">Limpiar Formulario</button>
+        <button type="button" id="btn-imprimir" class="btn btn-info">Imprimir</button>
+        <button type="submit" id="btn-guardar" class="btn btn-primary">Guardar Auditoría</button>
+      </div>
+    </form>
+
+    <!-- NAVEGACIÓN -->
+    <nav class="bottom-nav">
+      <a href="/" class="nav-link active">Nueva Auditoría</a>
+      <a href="/historial" class="nav-link">Historial</a>
+      <a href="/kpi" class="nav-link">KPIs</a>
+    </nav>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN -->
+  <div id="modal-confirmacion" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h3>Auditoría Guardada</h3>
+      <p id="modal-mensaje"></p>
+      <div class="modal-actions">
+        <button id="btn-nueva" class="btn btn-primary">Nueva Auditoría</button>
+        <button id="btn-ver-historial" class="btn btn-secondary">Ver Historial</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
