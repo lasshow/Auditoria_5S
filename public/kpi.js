@@ -281,3 +281,112 @@ function obtenerNumeroSemana(fecha) {
   const yearStart = new Date(d.getFullYear(), 0, 1);
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
+
+// ==================== AUTENTICACIÓN Y BACKUP ====================
+
+let adminCredentials = null;
+let pendingBackupType = null;
+
+function mostrarModalLogin() {
+  document.getElementById('modal-login').classList.add('show');
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+function cerrarModalLogin() {
+  document.getElementById('modal-login').classList.remove('show');
+  pendingBackupType = null;
+}
+
+async function realizarLogin() {
+  const usuario = document.getElementById('login-usuario').value;
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+
+  if (!usuario || !password) {
+    errorEl.textContent = 'Por favor, rellena todos los campos.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: usuario, password: password })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      adminCredentials = btoa(`${usuario}:${password}`);
+      cerrarModalLogin();
+      document.getElementById('admin-status').textContent = 'Autenticado como admin';
+      document.getElementById('admin-status').classList.add('authenticated');
+
+      // Si había una descarga pendiente, ejecutarla
+      if (pendingBackupType) {
+        descargarBackup(pendingBackupType);
+      }
+    } else {
+      errorEl.textContent = 'Credenciales incorrectas.';
+      errorEl.style.display = 'block';
+    }
+  } catch (error) {
+    errorEl.textContent = 'Error de conexión.';
+    errorEl.style.display = 'block';
+  }
+}
+
+async function descargarBackup(tipo) {
+  // Si no está autenticado, mostrar login
+  if (!adminCredentials) {
+    pendingBackupType = tipo;
+    mostrarModalLogin();
+    return;
+  }
+
+  try {
+    const url = tipo === 'json' ? '/api/backup/json' : '/api/backup';
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Basic ${adminCredentials}`
+      }
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      adminCredentials = null;
+      document.getElementById('admin-status').textContent = '';
+      document.getElementById('admin-status').classList.remove('authenticated');
+      pendingBackupType = tipo;
+      mostrarModalLogin();
+      return;
+    }
+
+    if (!response.ok) {
+      const error = await response.json();
+      alert('Error: ' + error.error);
+      return;
+    }
+
+    // Descargar el archivo
+    const blob = await response.blob();
+    const fecha = new Date().toISOString().split('T')[0];
+    const extension = tipo === 'json' ? 'json' : 'db';
+    const filename = `auditorias_backup_${fecha}.${extension}`;
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+  } catch (error) {
+    console.error('Error descargando backup:', error);
+    alert('Error al descargar el backup');
+  }
+}

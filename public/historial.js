@@ -13,6 +13,7 @@ let auditoriasFiltradas = [];
 let auditoriaAEliminar = null;
 const ITEMS_POR_PAGINA = 10;
 let paginaActual = 1;
+let adminCredentials = null; // Guardará las credenciales del admin si está logueado
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeThemeToggle();
@@ -416,7 +417,7 @@ function generarHojaAuditoria(auditoria) {
         ` : ''}
         <tr class="${!orden.lugar_guardar ? 'fila-requiere-accion' : ''}">
           <td>¿Hay un lugar donde guardar cada cosa encontrada?</td>
-          <td class="celda-centro">${siNo(orden.lugar_guardar, false)}</td>
+          <td class="celda-centro">${siNo(orden.lugar_guardar, true)}</td>
           <td class="celda-flecha">➜</td>
           <td>${formatearAccion('Crear lugares para guardar')}</td>
         </tr>
@@ -564,19 +565,28 @@ function initializeModals() {
   }
 }
 
-// Confirmar eliminación
-function confirmarEliminar(id) {
-  auditoriaAEliminar = id;
-  document.getElementById('modal-eliminar').classList.add('show');
-}
-
-// Eliminar auditoría
+// Eliminar auditoría (requiere autenticación)
 async function eliminarAuditoria() {
   if (!auditoriaAEliminar) return;
 
+  // Si no hay credenciales, mostrar login
+  if (!adminCredentials) {
+    mostrarModalLogin();
+    return;
+  }
+
+  // Mostrar modal de confirmación si viene del login
+  if (!document.getElementById('modal-eliminar').classList.contains('show')) {
+    document.getElementById('modal-eliminar').classList.add('show');
+    return;
+  }
+
   try {
     const response = await fetch(`/api/auditorias/${auditoriaAEliminar}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Basic ${adminCredentials}`
+      }
     });
 
     if (response.ok) {
@@ -588,7 +598,12 @@ async function eliminarAuditoria() {
       await cargarEstadisticas();
     } else {
       const result = await response.json();
-      alert(`Error al eliminar: ${result.error}`);
+      if (result.needsAuth) {
+        adminCredentials = null;
+        mostrarModalLogin();
+      } else {
+        alert(`Error al eliminar: ${result.error}`);
+      }
     }
   } catch (error) {
     console.error('Error:', error);
@@ -599,4 +614,69 @@ async function eliminarAuditoria() {
 // Cerrar modal de detalles
 function cerrarModalDetalles() {
   document.getElementById('modal-detalles').classList.remove('show');
+}
+
+// ==================== AUTENTICACIÓN ADMIN ====================
+
+// Mostrar modal de login
+function mostrarModalLogin() {
+  document.getElementById('modal-login').classList.add('show');
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+// Cerrar modal de login
+function cerrarModalLogin() {
+  document.getElementById('modal-login').classList.remove('show');
+}
+
+// Realizar login
+async function realizarLogin() {
+  const usuario = document.getElementById('login-usuario').value;
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+
+  if (!usuario || !password) {
+    errorEl.textContent = 'Por favor, rellena todos los campos.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: usuario, password: password })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      adminCredentials = btoa(`${usuario}:${password}`);
+      cerrarModalLogin();
+
+      // Si había una acción pendiente, ejecutarla
+      if (auditoriaAEliminar) {
+        eliminarAuditoria();
+      }
+    } else {
+      errorEl.textContent = 'Credenciales incorrectas.';
+      errorEl.style.display = 'block';
+    }
+  } catch (error) {
+    errorEl.textContent = 'Error de conexión.';
+    errorEl.style.display = 'block';
+  }
+}
+
+// Verificar si está autenticado antes de eliminar
+function confirmarEliminar(id) {
+  auditoriaAEliminar = id;
+
+  if (!adminCredentials) {
+    mostrarModalLogin();
+  } else {
+    document.getElementById('modal-eliminar').classList.add('show');
+  }
 }

@@ -12,6 +12,62 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ==================== AUTENTICACIÓN ADMIN ====================
+
+const ADMIN_CREDENTIALS = {
+  username: 'admin',
+  password: 'GHIhornos'
+};
+
+// Middleware para verificar autenticación básica
+function verificarAdmin(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return res.status(401).json({ error: 'Autenticación requerida', needsAuth: true });
+  }
+
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
+  const [username, password] = credentials.split(':');
+
+  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    next();
+  } else {
+    return res.status(403).json({ error: 'Credenciales incorrectas' });
+  }
+}
+
+// Endpoint para verificar credenciales (login)
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    res.json({ success: true, message: 'Autenticación exitosa' });
+  } else {
+    res.status(401).json({ success: false, error: 'Credenciales incorrectas' });
+  }
+});
+
+// Endpoint para verificar si está autenticado
+app.get('/api/auth/check', (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return res.json({ authenticated: false });
+  }
+
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
+  const [username, password] = credentials.split(':');
+
+  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    res.json({ authenticated: true });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
 // Variable para la base de datos
 let db;
 const DB_PATH = path.join(__dirname, 'auditorias.db');
@@ -538,8 +594,8 @@ app.post('/api/auditorias', (req, res) => {
   }
 });
 
-// Eliminar auditoría
-app.delete('/api/auditorias/:id', (req, res) => {
+// Eliminar auditoría (requiere autenticación admin)
+app.delete('/api/auditorias/:id', verificarAdmin, (req, res) => {
   try {
     const { id } = req.params;
 
@@ -718,6 +774,54 @@ app.get('/api/estadisticas', (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== BACKUP DE BASE DE DATOS (requiere admin) ====================
+
+app.get('/api/backup', verificarAdmin, (req, res) => {
+  try {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+
+    const fecha = new Date().toISOString().split('T')[0];
+    const filename = `auditorias_backup_${fecha}.db`;
+
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al generar backup: ' + error.message });
+  }
+});
+
+// Exportar datos como JSON (requiere admin)
+app.get('/api/backup/json', verificarAdmin, (req, res) => {
+  try {
+    const auditorias = queryAll('SELECT * FROM auditorias ORDER BY fecha DESC');
+
+    // Obtener datos completos de cada auditoría
+    const datosCompletos = auditorias.map(auditoria => {
+      return {
+        ...auditoria,
+        clasificacion: queryOne('SELECT * FROM respuestas_clasificacion WHERE auditoria_id = ?', [auditoria.id]),
+        orden: queryOne('SELECT * FROM respuestas_orden WHERE auditoria_id = ?', [auditoria.id]),
+        limpieza: queryOne('SELECT * FROM respuestas_limpieza WHERE auditoria_id = ?', [auditoria.id]),
+        inspeccion: queryOne('SELECT * FROM respuestas_inspeccion WHERE auditoria_id = ?', [auditoria.id]),
+        desglose_innecesarios: queryAll('SELECT * FROM desglose_innecesarios WHERE auditoria_id = ?', [auditoria.id]),
+        desglose_orden: queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = ?', [auditoria.id]),
+        acciones: queryAll('SELECT * FROM acciones_correctivas WHERE auditoria_id = ?', [auditoria.id])
+      };
+    });
+
+    const fecha = new Date().toISOString().split('T')[0];
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="auditorias_${fecha}.json"`);
+    res.json(datosCompletos);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al exportar datos: ' + error.message });
   }
 });
 

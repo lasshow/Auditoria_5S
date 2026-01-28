@@ -107,6 +107,30 @@
     </nav>
   </div>
 
+  <!-- MODAL DE LOGIN -->
+  <div id="modal-login" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="cerrarModalLogin()">&times;</span>
+      <h3>Acceso Administrador</h3>
+      <p>Introduce las credenciales de administrador para continuar.</p>
+      <div class="login-form">
+        <div class="form-group">
+          <label for="login-usuario">Usuario:</label>
+          <input type="text" id="login-usuario" placeholder="Usuario">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contraseña:</label>
+          <input type="password" id="login-password" placeholder="Contraseña">
+        </div>
+        <p id="login-error" class="error-message" style="display:none;"></p>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-login" class="btn btn-primary" onclick="realizarLogin()">Iniciar Sesión</button>
+        <button class="btn btn-secondary" onclick="cerrarModalLogin()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN -->
   <div id="modal-eliminar" class="modal">
     <div class="modal-content">
