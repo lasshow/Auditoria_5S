@@ -1984,39 +1984,66 @@ body.dark-mode .hoja-fecha-impresion {
 
 /* ==================== ESTILOS DE IMPRESIÓN PARA HOJA ==================== */
 @media print {
-  body * {
-    visibility: hidden;
+  /* Ocultar todo excepto el contenido de la hoja */
+  body > *:not(.modal) {
+    display: none !important;
   }
 
-  .modal-fullscreen,
-  .modal-fullscreen .modal-hoja-auditoria,
-  .hoja-auditoria,
-  .hoja-auditoria * {
-    visibility: visible;
+  /* Ocultar modales que no están activos */
+  .modal:not(.show) {
+    display: none !important;
   }
 
-  .modal-fullscreen {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+  /* Mostrar y posicionar correctamente el modal activo */
+  .modal.show {
+    display: block !important;
+    position: static !important;
     background: white !important;
-  }
-
-  .modal-hoja-auditoria {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
     height: auto !important;
     overflow: visible !important;
   }
 
+  .modal.show .modal-content {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .modal-fullscreen.show .modal-hoja-auditoria {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* Ocultar elementos de control */
   .no-print,
-  .modal-header-actions {
+  .modal-header-actions,
+  .modal-close {
     display: none !important;
   }
 
+  /* Hacer visible todo el contenido de la hoja */
   .hoja-auditoria {
+    display: block !important;
+    visibility: visible !important;
     max-width: 100%;
-    padding: 0;
+    padding: 10px;
     margin: 0;
+  }
+
+  .hoja-auditoria * {
+    visibility: visible !important;
   }
 
   .hoja-header {
