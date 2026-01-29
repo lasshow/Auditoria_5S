@@ -3,6 +3,7 @@ node_modules/
 
 # Base de datos local (contiene datos sensibles)
 auditorias.db
+data/
 
 # Archivos temporales
 *.log

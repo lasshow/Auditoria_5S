@@ -39,10 +39,18 @@
 
 ## Contexto del Proyecto
 
-- **Stack:** Node.js + Express + sql.js (SQLite)
+- **Stack:** Node.js + Express + PostgreSQL
 - **Frontend:** Vanilla JS, HTML, CSS
 - **Deployment:** Railway (https://auditoria5s-production.up.railway.app/)
 - **Repo:** https://github.com/lasshow/Auditoria_5S
+
+## Variables de Entorno Requeridas
+
+- `DATABASE_URL` - Conexión a PostgreSQL (Railway la configura automáticamente)
+- `PORT` - Puerto del servidor (Railway lo asigna automáticamente)
+- `NODE_ENV` - production en Railway
+- `ADMIN_USER` - Usuario admin (opcional, default: admin)
+- `ADMIN_PASSWORD` - Password admin (opcional, default: GHIhornos)
 
 ## Credenciales Admin
 
