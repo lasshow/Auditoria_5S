@@ -760,6 +760,108 @@ app.get('/api/backup/json', verificarAdmin, async (req, res) => {
   }
 });
 
+// Exportar a CSV
+app.get('/api/backup/csv', verificarAdmin, async (req, res) => {
+  try {
+    const auditorias = await queryAll(`
+      SELECT
+        a.id,
+        a.fecha,
+        a.parcela,
+        a.auditor,
+        a.created_at,
+        COALESCE(rc.innecesarios_desconocidos, 0) as innecesarios_desconocidos,
+        COALESCE(rc.innecesarios_no_fullkit, 0) as innecesarios_no_fullkit,
+        COALESCE(rc.innecesarios_desconocidos, 0) + COALESCE(rc.innecesarios_no_fullkit, 0) as total_innecesarios,
+        CASE WHEN ro.herramienta_fuera THEN 'Sí' ELSE 'No' END as herramienta_fuera,
+        ro.herramienta_detalle,
+        CASE WHEN ro.eslingas_fuera THEN 'Sí' ELSE 'No' END as eslingas_fuera,
+        ro.eslingas_detalle,
+        CASE WHEN ro.maquinas_fuera THEN 'Sí' ELSE 'No' END as maquinas_fuera,
+        ro.maquinas_detalle,
+        CASE WHEN ro.ropa_epis_fuera THEN 'Sí' ELSE 'No' END as ropa_epis_fuera,
+        ro.ropa_epis_detalle,
+        CASE WHEN rl.area_sucia THEN 'Sí' ELSE 'No' END as area_sucia,
+        rl.area_sucia_detalle,
+        CASE WHEN rl.area_residuos THEN 'Sí' ELSE 'No' END as area_residuos,
+        rl.area_residuos_detalle,
+        CASE WHEN ri.salidas_gas_precintadas THEN 'Sí' ELSE 'No' END as salidas_gas_precintadas,
+        CASE WHEN ri.riesgos_carteles THEN 'Sí' ELSE 'No' END as riesgos_carteles,
+        CASE WHEN ri.zonas_delimitadas THEN 'Sí' ELSE 'No' END as zonas_delimitadas,
+        CASE WHEN ri.cuadros_electricos_ok THEN 'Sí' ELSE 'No' END as cuadros_electricos_ok,
+        CASE WHEN ri.aire_comprimido_ok THEN 'Sí' ELSE 'No' END as aire_comprimido_ok,
+        ri.inspeccion_detalle
+      FROM auditorias a
+      LEFT JOIN respuestas_clasificacion rc ON a.id = rc.auditoria_id
+      LEFT JOIN respuestas_orden ro ON a.id = ro.auditoria_id
+      LEFT JOIN respuestas_limpieza rl ON a.id = rl.auditoria_id
+      LEFT JOIN respuestas_inspeccion ri ON a.id = ri.auditoria_id
+      ORDER BY a.fecha DESC
+    `);
+
+    // Crear CSV
+    const headers = [
+      'ID', 'Fecha', 'Parcela', 'Auditor', 'Creado',
+      'Innecesarios Desconocidos', 'Innecesarios No FullKit', 'Total Innecesarios',
+      'Herramienta Fuera', 'Herramienta Detalle',
+      'Eslingas Fuera', 'Eslingas Detalle',
+      'Máquinas Fuera', 'Máquinas Detalle',
+      'Ropa/EPIs Fuera', 'Ropa/EPIs Detalle',
+      'Área Sucia', 'Área Sucia Detalle',
+      'Área Residuos', 'Área Residuos Detalle',
+      'Salidas Gas Precintadas', 'Riesgos Carteles', 'Zonas Delimitadas',
+      'Cuadros Eléctricos OK', 'Aire Comprimido OK', 'Inspección Detalle'
+    ];
+
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = auditorias.map(a => [
+      a.id,
+      a.fecha ? new Date(a.fecha).toISOString().split('T')[0] : '',
+      a.parcela,
+      a.auditor,
+      a.created_at ? new Date(a.created_at).toISOString() : '',
+      a.innecesarios_desconocidos,
+      a.innecesarios_no_fullkit,
+      a.total_innecesarios,
+      a.herramienta_fuera,
+      a.herramienta_detalle,
+      a.eslingas_fuera,
+      a.eslingas_detalle,
+      a.maquinas_fuera,
+      a.maquinas_detalle,
+      a.ropa_epis_fuera,
+      a.ropa_epis_detalle,
+      a.area_sucia,
+      a.area_sucia_detalle,
+      a.area_residuos,
+      a.area_residuos_detalle,
+      a.salidas_gas_precintadas,
+      a.riesgos_carteles,
+      a.zonas_delimitadas,
+      a.cuadros_electricos_ok,
+      a.aire_comprimido_ok,
+      a.inspeccion_detalle
+    ].map(escapeCSV).join(','));
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const fecha = new Date().toISOString().split('T')[0];
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="auditorias_${fecha}.csv"`);
+    res.send('\uFEFF' + csv); // BOM para Excel
+  } catch (error) {
+    res.status(500).json({ error: 'Error al exportar CSV: ' + error.message });
+  }
+});
+
 // Servir páginas
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

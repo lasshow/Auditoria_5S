@@ -101,7 +101,7 @@ function actualizarGraficoEvolucion(data) {
   if (parcelaFiltro) {
     datasets = [{
       label: parcelaFiltro,
-      data: semanas.map(s => s.totalInnecesarios || 0),
+      data: semanas.map(s => parseInt(s.totalinnecesarios) || 0),
       borderColor: COLORES_PARCELAS[parcelaFiltro] || '#8B0000',
       backgroundColor: (COLORES_PARCELAS[parcelaFiltro] || '#8B0000') + '40',
       fill: true,
@@ -123,7 +123,7 @@ function actualizarGraficoEvolucion(data) {
     parcelasUnicas.forEach(parcela => {
       const dataParcela = semanasUnicas.map(sem => {
         const registro = semanas.find(s => s.semana === sem && s.parcela === parcela);
-        return registro ? registro.totalInnecesarios : 0;
+        return registro ? parseInt(registro.totalinnecesarios) || 0 : 0;
       });
 
       datasets.push({
@@ -179,7 +179,7 @@ function actualizarGraficoParcelas(data) {
 
   const porParcela = data.porParcela || [];
   const labels = porParcela.map(p => p.parcela);
-  const valores = porParcela.map(p => p.totalInnecesarios);
+  const valores = porParcela.map(p => parseInt(p.totalinnecesarios) || 0);
   const colores = labels.map(l => COLORES_PARCELAS[l] || '#999');
 
   chartParcelas = new Chart(ctx, {
@@ -234,9 +234,9 @@ function actualizarTabla(data) {
       <td>${r.semana}</td>
       <td>${formatearFecha(r.fecha)}</td>
       <td><span class="parcela-badge" style="border-left-color: ${COLORES_PARCELAS[r.parcela] || '#999'}">${r.parcela}</span></td>
-      <td class="num-cell">${r.innecesariosDesconocidos}</td>
-      <td class="num-cell">${r.innecesariosNoFullkit}</td>
-      <td class="num-cell total-cell">${r.totalInnecesarios}</td>
+      <td class="num-cell">${r.innecesariosdesconocidos || 0}</td>
+      <td class="num-cell">${r.innecesariosnofullkit || 0}</td>
+      <td class="num-cell total-cell">${r.totalinnecesarios || 0}</td>
     </tr>
   `).join('');
 }
@@ -257,12 +257,13 @@ function actualizarRanking(data) {
     else if (idx === 2) medalla = '<span class="medalla bronce">3</span>';
     else medalla = `<span class="medalla">${idx + 1}</span>`;
 
+    const promedio = parseFloat(r.promedio) || 0;
     return `
       <div class="ranking-item">
         ${medalla}
         <span class="ranking-parcela" style="border-left-color: ${COLORES_PARCELAS[r.parcela] || '#999'}">${r.parcela}</span>
-        <span class="ranking-valor">${r.totalInnecesarios} incidencias</span>
-        <span class="ranking-promedio">(${r.promedio.toFixed(1)}/semana)</span>
+        <span class="ranking-valor">${r.totalinnecesarios || 0} incidencias</span>
+        <span class="ranking-promedio">(${promedio.toFixed(1)}/semana)</span>
       </div>
     `;
   }).join('');
@@ -348,7 +349,7 @@ async function descargarBackup(tipo) {
   }
 
   try {
-    const url = tipo === 'json' ? '/api/backup/json' : '/api/backup';
+    const url = tipo === 'json' ? '/api/backup/json' : '/api/backup/csv';
 
     const response = await fetch(url, {
       headers: {
@@ -374,7 +375,7 @@ async function descargarBackup(tipo) {
     // Descargar el archivo
     const blob = await response.blob();
     const fecha = new Date().toISOString().split('T')[0];
-    const extension = tipo === 'json' ? 'json' : 'db';
+    const extension = tipo === 'json' ? 'json' : 'csv';
     const filename = `auditorias_backup_${fecha}.${extension}`;
 
     const link = document.createElement('a');
