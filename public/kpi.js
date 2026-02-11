@@ -102,10 +102,9 @@ function actualizarGraficoEvolucion(data) {
     datasets = [{
       label: parcelaFiltro,
       data: semanas.map(s => parseInt(s.totalinnecesarios) || 0),
+      backgroundColor: (COLORES_PARCELAS[parcelaFiltro] || '#8B0000') + 'AA',
       borderColor: COLORES_PARCELAS[parcelaFiltro] || '#8B0000',
-      backgroundColor: (COLORES_PARCELAS[parcelaFiltro] || '#8B0000') + '40',
-      fill: true,
-      tension: 0.3
+      borderWidth: 1
     }];
   } else {
     // Agrupar por parcela
@@ -129,10 +128,9 @@ function actualizarGraficoEvolucion(data) {
       datasets.push({
         label: parcela,
         data: dataParcela,
+        backgroundColor: (COLORES_PARCELAS[parcela] || '#999') + 'AA',
         borderColor: COLORES_PARCELAS[parcela] || '#999',
-        backgroundColor: 'transparent',
-        tension: 0.3,
-        borderWidth: 2
+        borderWidth: 1
       });
     });
 
@@ -142,7 +140,7 @@ function actualizarGraficoEvolucion(data) {
   }
 
   chartEvolucion = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: { labels, datasets },
     options: {
       responsive: true,

@@ -117,14 +117,17 @@ const Validator = {
   },
 
   isValidBoolean(value) {
+    if (value === null || value === undefined || value === '') return true;
     if (typeof value === 'boolean') return true;
     if (typeof value === 'string') {
-      return ['si', 'no', 'true', 'false', '1', '0'].includes(value.toLowerCase());
+      return ['si', 'no', 'na', 'true', 'false', '1', '0'].includes(value.toLowerCase());
     }
     return typeof value === 'number' && (value === 0 || value === 1);
   },
 
   toDbBoolean(value) {
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value === 'string' && value.toLowerCase() === 'na') return null;
     if (typeof value === 'boolean') return value;
     if (typeof value === 'string') {
       return ['si', 'true', '1'].includes(value.toLowerCase());
@@ -558,6 +561,193 @@ app.post('/api/auditorias', async (req, res) => {
     res.status(201).json({
       message: 'Auditoría guardada correctamente',
       id: auditoriaId
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Actualizar auditoría existente
+app.put('/api/auditorias/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    if (!Validator.isValidId(id)) {
+      return res.status(400).json({ error: 'ID de auditoría inválido' });
+    }
+
+    const existe = await client.query('SELECT id FROM auditorias WHERE id = $1', [id]);
+    if (existe.rows.length === 0) {
+      return res.status(404).json({ error: 'Auditoría no encontrada' });
+    }
+
+    const { fecha, parcela, auditor, clasificacion, orden, limpieza, inspeccion, acciones } = req.body;
+
+    if (!Validator.isValidDate(fecha)) {
+      return res.status(400).json({ error: 'Fecha inválida. Formato esperado: YYYY-MM-DD' });
+    }
+
+    if (!Validator.isValidParcela(parcela)) {
+      return res.status(400).json({ error: 'Parcela inválida o no reconocida' });
+    }
+
+    const auditorSanitizado = Validator.sanitizeString(auditor || 'Sin especificar', 100);
+
+    await client.query('BEGIN');
+
+    // Actualizar auditoría principal
+    await client.query(
+      'UPDATE auditorias SET fecha = $1, parcela = $2, auditor = $3 WHERE id = $4',
+      [fecha, parcela, auditorSanitizado, id]
+    );
+
+    // Eliminar datos hijos existentes y re-insertar
+    await client.query('DELETE FROM respuestas_clasificacion WHERE auditoria_id = $1', [id]);
+    await client.query('DELETE FROM desglose_innecesarios WHERE auditoria_id = $1', [id]);
+    await client.query('DELETE FROM respuestas_orden WHERE auditoria_id = $1', [id]);
+    await client.query('DELETE FROM desglose_orden WHERE auditoria_id = $1', [id]);
+    await client.query('DELETE FROM respuestas_limpieza WHERE auditoria_id = $1', [id]);
+    await client.query('DELETE FROM respuestas_inspeccion WHERE auditoria_id = $1', [id]);
+    await client.query('DELETE FROM acciones_correctivas WHERE auditoria_id = $1', [id]);
+
+    // Re-insertar respuestas de clasificación
+    if (clasificacion) {
+      await client.query(
+        `INSERT INTO respuestas_clasificacion
+        (auditoria_id, innecesarios_desconocidos, listado_desconocidos, innecesarios_no_fullkit, listado_no_fullkit)
+        VALUES ($1, $2, $3, $4, $5)`,
+        [
+          id,
+          parseInt(clasificacion.innecesarios_desconocidos) || 0,
+          Validator.sanitizeString(clasificacion.listado_desconocidos || '', 2000),
+          parseInt(clasificacion.innecesarios_no_fullkit) || 0,
+          Validator.sanitizeString(clasificacion.listado_no_fullkit || '', 2000)
+        ]
+      );
+
+      if (Validator.isValidDesglose(clasificacion.desglose_desconocidos)) {
+        for (const item of clasificacion.desglose_desconocidos) {
+          await client.query(
+            `INSERT INTO desglose_innecesarios (auditoria_id, categoria, linea, tipo_innecesario, accion)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [id, 'desconocidos', item.linea, Validator.sanitizeString(item.tipo_innecesario || ''), Validator.sanitizeString(item.accion || '')]
+          );
+        }
+      }
+
+      if (Validator.isValidDesglose(clasificacion.desglose_no_fullkit)) {
+        for (const item of clasificacion.desglose_no_fullkit) {
+          await client.query(
+            `INSERT INTO desglose_innecesarios (auditoria_id, categoria, linea, tipo_innecesario, accion)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [id, 'no_fullkit', item.linea, Validator.sanitizeString(item.tipo_innecesario || ''), Validator.sanitizeString(item.accion || '')]
+          );
+        }
+      }
+    }
+
+    // Re-insertar respuestas de orden
+    if (orden) {
+      await client.query(
+        `INSERT INTO respuestas_orden
+        (auditoria_id, herramienta_fuera, herramienta_detalle, eslingas_fuera, eslingas_detalle,
+         maquinas_fuera, maquinas_detalle, ropa_epis_fuera, ropa_epis_detalle, lugar_guardar, lugar_guardar_detalle)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [
+          id,
+          Validator.toDbBoolean(orden.herramienta_fuera),
+          Validator.sanitizeString(orden.herramienta_detalle || ''),
+          Validator.toDbBoolean(orden.eslingas_fuera),
+          Validator.sanitizeString(orden.eslingas_detalle || ''),
+          Validator.toDbBoolean(orden.maquinas_fuera),
+          Validator.sanitizeString(orden.maquinas_detalle || ''),
+          Validator.toDbBoolean(orden.ropa_epis_fuera),
+          Validator.sanitizeString(orden.ropa_epis_detalle || ''),
+          Validator.toDbBoolean(orden.lugar_guardar),
+          Validator.sanitizeString(orden.lugar_guardar_detalle || '')
+        ]
+      );
+
+      const categoriasOrden = ['herramienta', 'eslingas', 'maquinas', 'ropa'];
+      for (const cat of categoriasOrden) {
+        const desgloseKey = `desglose_${cat}`;
+        if (Validator.isValidDesglose(orden[desgloseKey])) {
+          for (const item of orden[desgloseKey]) {
+            await client.query(
+              `INSERT INTO desglose_orden (auditoria_id, categoria, linea, tipo_elemento, accion)
+               VALUES ($1, $2, $3, $4, $5)`,
+              [id, cat, item.linea, Validator.sanitizeString(item.tipo_elemento || ''), Validator.sanitizeString(item.accion || '')]
+            );
+          }
+        }
+      }
+    }
+
+    // Re-insertar respuestas de limpieza
+    if (limpieza) {
+      await client.query(
+        `INSERT INTO respuestas_limpieza
+        (auditoria_id, area_sucia, area_sucia_detalle, area_residuos, area_residuos_detalle)
+        VALUES ($1, $2, $3, $4, $5)`,
+        [
+          id,
+          Validator.toDbBoolean(limpieza.area_sucia),
+          Validator.sanitizeString(limpieza.area_sucia_detalle || ''),
+          Validator.toDbBoolean(limpieza.area_residuos),
+          Validator.sanitizeString(limpieza.area_residuos_detalle || '')
+        ]
+      );
+    }
+
+    // Re-insertar respuestas de inspección
+    if (inspeccion) {
+      await client.query(
+        `INSERT INTO respuestas_inspeccion
+        (auditoria_id, salidas_gas_precintadas, riesgos_carteles, zonas_delimitadas,
+         cuadros_electricos_ok, aire_comprimido_ok, inspeccion_detalle)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          id,
+          Validator.toDbBoolean(inspeccion.salidas_gas_precintadas),
+          Validator.toDbBoolean(inspeccion.riesgos_carteles),
+          Validator.toDbBoolean(inspeccion.zonas_delimitadas),
+          Validator.toDbBoolean(inspeccion.cuadros_electricos_ok),
+          Validator.toDbBoolean(inspeccion.aire_comprimido_ok),
+          Validator.sanitizeString(inspeccion.inspeccion_detalle || '')
+        ]
+      );
+    }
+
+    // Re-insertar acciones correctivas
+    if (acciones && Array.isArray(acciones)) {
+      for (const accion of acciones) {
+        if (!Validator.isNonEmptyString(accion.descripcion)) continue;
+
+        await client.query(
+          `INSERT INTO acciones_correctivas
+          (auditoria_id, seccion, descripcion, responsable, fecha_limite, estado)
+          VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            id,
+            Validator.sanitizeString(accion.seccion || 'general', 50),
+            Validator.sanitizeString(accion.descripcion, 1000),
+            Validator.sanitizeString(accion.responsable || '', 100),
+            Validator.isValidDate(accion.fecha_limite) ? accion.fecha_limite : null,
+            Validator.isValidEstado(accion.estado) ? accion.estado : 'pendiente'
+          ]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Auditoría actualizada correctamente',
+      id: parseInt(id)
     });
   } catch (error) {
     await client.query('ROLLBACK');

@@ -9,6 +9,10 @@
   }
 })();
 
+// Variable global para modo edición
+let modoEdicion = false;
+let auditoriaEditarId = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
   await cargarPersonalizados();
 
@@ -20,6 +24,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicializar todos los desgloses usando el sistema genérico
   DesgloseManager.initAll();
+
+  // Detectar modo edición
+  const params = new URLSearchParams(window.location.search);
+  const editarId = params.get('editar');
+  if (editarId) {
+    await cargarAuditoriaParaEditar(editarId);
+  }
 });
 
 // ==================== CONFIGURACIÓN DE TIPOS Y ACCIONES ====================
@@ -234,6 +245,10 @@ const DesgloseManager = {
         const invertir = e.target.dataset.invertir === 'true';
         const valor = e.target.value;
         const mostrar = invertir ? (valor === 'no') : (valor === 'si');
+        if (valor === 'na' || valor === '') {
+          this.ocultar(seccion, categoria);
+          return;
+        }
 
         if (mostrar) {
           this.mostrar(seccion, categoria);
@@ -871,8 +886,11 @@ async function handleFormSubmit(e) {
   };
 
   try {
-    const response = await fetch('/api/auditorias', {
-      method: 'POST',
+    const url = modoEdicion ? `/api/auditorias/${auditoriaEditarId}` : '/api/auditorias';
+    const method = modoEdicion ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method: method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(auditoriaData)
     });
@@ -880,7 +898,20 @@ async function handleFormSubmit(e) {
     const result = await response.json();
 
     if (response.ok) {
-      mostrarModal(`La auditoría #${result.id} ha sido guardada correctamente en la base de datos.`);
+      const mensaje = modoEdicion
+        ? `La auditoría #${result.id} ha sido actualizada correctamente.`
+        : `La auditoría #${result.id} ha sido guardada correctamente en la base de datos.`;
+      mostrarModal(mensaje);
+
+      // Resetear modo edición
+      if (modoEdicion) {
+        modoEdicion = false;
+        auditoriaEditarId = null;
+        const btnGuardar = document.getElementById('btn-guardar');
+        if (btnGuardar) btnGuardar.textContent = 'Guardar Auditoría';
+        // Limpiar parámetro de URL
+        window.history.replaceState({}, '', '/');
+      }
     } else {
       alert(`Error al guardar: ${result.error}`);
     }
@@ -899,6 +930,15 @@ function limpiarFormulario() {
 function limpiarFormularioSinConfirmar() {
   const form = document.getElementById('auditoria-form');
   form.reset();
+
+  // Resetear modo edición si estaba activo
+  if (modoEdicion) {
+    modoEdicion = false;
+    auditoriaEditarId = null;
+    const btnGuardar = document.getElementById('btn-guardar');
+    if (btnGuardar) btnGuardar.textContent = 'Guardar Auditoría';
+    window.history.replaceState({}, '', '/');
+  }
 
   document.querySelectorAll('.parcela-area').forEach(area => area.classList.remove('selected'));
   document.querySelectorAll('input[name="parcela"]').forEach(radio => radio.checked = false);
@@ -954,4 +994,155 @@ function mostrarModal(mensaje) {
 function cerrarModal() {
   const modal = document.getElementById('modal-confirmacion');
   if (modal) modal.classList.remove('show');
+}
+
+// ==================== MODO EDICIÓN ====================
+
+async function cargarAuditoriaParaEditar(id) {
+  try {
+    const response = await fetch(`/api/auditorias/${id}`);
+    if (!response.ok) {
+      alert('Error al cargar la auditoría para editar.');
+      return;
+    }
+
+    const data = await response.json();
+
+    modoEdicion = true;
+    auditoriaEditarId = id;
+
+    // Cambiar título del botón guardar
+    const btnGuardar = document.getElementById('btn-guardar');
+    if (btnGuardar) btnGuardar.textContent = 'Actualizar Auditoría';
+
+    // Poblar datos generales
+    const fechaInput = document.getElementById('fecha');
+    if (fechaInput && data.fecha) {
+      fechaInput.value = data.fecha.split('T')[0];
+    }
+
+    const auditorInput = document.getElementById('auditor');
+    if (auditorInput) auditorInput.value = data.auditor || '';
+
+    // Seleccionar parcela
+    const parcelaRadios = document.querySelectorAll('input[name="parcela"]');
+    parcelaRadios.forEach(radio => {
+      if (radio.value === data.parcela) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change'));
+      }
+    });
+
+    // Seleccionar parcela en el mapa
+    document.querySelectorAll('.parcela-area').forEach(area => {
+      area.classList.remove('selected');
+      if (area.dataset.parcela === data.parcela) area.classList.add('selected');
+    });
+
+    // Poblar clasificación
+    if (data.clasificacion) {
+      const cls = data.clasificacion;
+
+      // Innecesarios desconocidos
+      if (cls.desglose_desconocidos && cls.desglose_desconocidos.length > 0) {
+        cls.desglose_desconocidos.forEach(item => {
+          DesgloseManager.agregarLinea('innecesarios', 'desconocidos');
+          const lineaNum = DesgloseManager.configs.innecesarios.contadores.desconocidos;
+          const selectTipo = document.getElementById(`tipo-desconocidos-${lineaNum}`);
+          const selectAccion = document.getElementById(`accion-desconocidos-${lineaNum}`);
+          if (selectTipo) selectTipo.value = item.tipo_innecesario || '';
+          if (selectAccion) selectAccion.value = item.accion || '';
+          const tipoMostrado = document.getElementById(`tipo-mostrado-desconocidos-${lineaNum}`);
+          if (tipoMostrado) tipoMostrado.textContent = item.tipo_innecesario || 'Sin seleccionar';
+        });
+      }
+
+      if (cls.desglose_no_fullkit && cls.desglose_no_fullkit.length > 0) {
+        cls.desglose_no_fullkit.forEach(item => {
+          DesgloseManager.agregarLinea('innecesarios', 'nofullkit');
+          const lineaNum = DesgloseManager.configs.innecesarios.contadores.nofullkit;
+          const selectTipo = document.getElementById(`tipo-nofullkit-${lineaNum}`);
+          const selectAccion = document.getElementById(`accion-nofullkit-${lineaNum}`);
+          if (selectTipo) selectTipo.value = item.tipo_innecesario || '';
+          if (selectAccion) selectAccion.value = item.accion || '';
+          const tipoMostrado = document.getElementById(`tipo-mostrado-nofullkit-${lineaNum}`);
+          if (tipoMostrado) tipoMostrado.textContent = item.tipo_innecesario || 'Sin seleccionar';
+        });
+      }
+
+      const listadoDesc = document.getElementById('listado_desconocidos');
+      if (listadoDesc) listadoDesc.value = cls.listado_desconocidos || '';
+
+      const listadoNF = document.getElementById('listado_no_fullkit');
+      if (listadoNF) listadoNF.value = cls.listado_no_fullkit || '';
+    }
+
+    // Poblar orden
+    if (data.orden) {
+      const ord = data.orden;
+      poblarSelectSiNo('herramienta_fuera', ord.herramienta_fuera);
+      poblarSelectSiNo('eslingas_fuera', ord.eslingas_fuera);
+      poblarSelectSiNo('maquinas_fuera', ord.maquinas_fuera);
+      poblarSelectSiNo('ropa_epis_fuera', ord.ropa_epis_fuera);
+      poblarSelectSiNo('lugar_guardar', ord.lugar_guardar);
+
+      const ordenDetalle = document.getElementById('orden_detalle');
+      if (ordenDetalle) ordenDetalle.value = ord.lugar_guardar_detalle || '';
+
+      // Poblar desgloses de orden
+      const categoriasOrden = ['herramienta', 'eslingas', 'maquinas', 'ropa'];
+      categoriasOrden.forEach(cat => {
+        const items = ord[`desglose_${cat}`];
+        if (items && items.length > 0) {
+          items.forEach(item => {
+            DesgloseManager.agregarLinea('orden', cat);
+            const lineaNum = DesgloseManager.configs.orden.contadores[cat];
+            const selectTipo = document.getElementById(`tipo-${cat}-${lineaNum}`);
+            const selectAccion = document.getElementById(`accion-${cat}-${lineaNum}`);
+            if (selectTipo) selectTipo.value = item.tipo_elemento || '';
+            if (selectAccion) selectAccion.value = item.accion || '';
+            const tipoMostrado = document.getElementById(`tipo-mostrado-${cat}-${lineaNum}`);
+            if (tipoMostrado) tipoMostrado.textContent = item.tipo_elemento || 'Sin seleccionar';
+          });
+        }
+      });
+    }
+
+    // Poblar limpieza
+    if (data.limpieza) {
+      poblarSelectSiNo('area_sucia', data.limpieza.area_sucia);
+      poblarSelectSiNo('area_residuos', data.limpieza.area_residuos);
+    }
+
+    // Poblar inspección
+    if (data.inspeccion) {
+      poblarSelectSiNo('salidas_gas_precintadas', data.inspeccion.salidas_gas_precintadas);
+      poblarSelectSiNo('riesgos_carteles', data.inspeccion.riesgos_carteles);
+      poblarSelectSiNo('zonas_delimitadas', data.inspeccion.zonas_delimitadas);
+      poblarSelectSiNo('cuadros_electricos_ok', data.inspeccion.cuadros_electricos_ok);
+      poblarSelectSiNo('aire_comprimido_ok', data.inspeccion.aire_comprimido_ok);
+    }
+
+  } catch (error) {
+    console.error('Error cargando auditoría para editar:', error);
+    alert('Error al cargar la auditoría.');
+  }
+}
+
+function poblarSelectSiNo(elementId, valor) {
+  const select = document.getElementById(elementId);
+  if (!select) return;
+
+  if (valor === null || valor === undefined) {
+    select.value = 'na';
+  } else if (valor === true) {
+    select.value = 'si';
+  } else if (valor === false) {
+    select.value = 'no';
+  } else {
+    select.value = '';
+  }
+
+  // Disparar el evento change para que se muestren/oculten los desgloses
+  select.dispatchEvent(new Event('change'));
 }

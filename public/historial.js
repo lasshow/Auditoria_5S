@@ -92,6 +92,7 @@ function renderizarTabla() {
       <td>${auditoria.auditor || '-'}</td>
       <td>
         <button class="btn btn-info btn-small" onclick="verDetalles(${auditoria.id})">Ver</button>
+        <button class="btn btn-warning btn-small" onclick="modificarAuditoria(${auditoria.id})">Modificar</button>
         <button class="btn btn-danger btn-small" onclick="confirmarEliminar(${auditoria.id})">Eliminar</button>
       </td>
     </tr>
@@ -227,6 +228,9 @@ function generarHojaAuditoria(auditoria) {
   // invertir=false: SI=problema (rojo), NO=ok (verde) - ej: "¿Hay herramienta fuera?"
   // invertir=true: SI=ok (verde), NO=problema (rojo) - ej: "¿Están precintadas?"
   const siNo = (valor, invertir = false) => {
+    if (valor === null || valor === undefined) {
+      return `<span class="respuesta-valor valor-na">NA</span>`;
+    }
     const hayProblema = invertir ? !valor : valor;
     const texto = valor ? 'SI' : 'NO';
     const clase = hayProblema ? 'valor-problema' : 'valor-ok';
@@ -363,7 +367,7 @@ function generarHojaAuditoria(auditoria) {
         </tr>
       </thead>
       <tbody>
-        <tr class="${orden.herramienta_fuera ? 'fila-requiere-accion' : ''}">
+        <tr class="${orden.herramienta_fuera === true ? 'fila-requiere-accion' : ''}">
           <td>¿Hay herramienta fuera de su ubicación?</td>
           <td class="celda-centro">${siNo(orden.herramienta_fuera)}</td>
           <td class="celda-flecha">➜</td>
@@ -376,7 +380,7 @@ function generarHojaAuditoria(auditoria) {
           </td>
         </tr>
         ` : ''}
-        <tr class="${orden.eslingas_fuera ? 'fila-requiere-accion' : ''}">
+        <tr class="${orden.eslingas_fuera === true ? 'fila-requiere-accion' : ''}">
           <td>¿Hay eslingas, cadenas, grilletes fuera de sus perchas?</td>
           <td class="celda-centro">${siNo(orden.eslingas_fuera)}</td>
           <td class="celda-flecha">➜</td>
@@ -389,7 +393,7 @@ function generarHojaAuditoria(auditoria) {
           </td>
         </tr>
         ` : ''}
-        <tr class="${orden.maquinas_fuera ? 'fila-requiere-accion' : ''}">
+        <tr class="${orden.maquinas_fuera === true ? 'fila-requiere-accion' : ''}">
           <td>¿Hay máquinas fuera de su lugar?</td>
           <td class="celda-centro">${siNo(orden.maquinas_fuera)}</td>
           <td class="celda-flecha">➜</td>
@@ -402,7 +406,7 @@ function generarHojaAuditoria(auditoria) {
           </td>
         </tr>
         ` : ''}
-        <tr class="${orden.ropa_epis_fuera ? 'fila-requiere-accion' : ''}">
+        <tr class="${orden.ropa_epis_fuera === true ? 'fila-requiere-accion' : ''}">
           <td>¿Hay ropa o EPIS fuera de su lugar?</td>
           <td class="celda-centro">${siNo(orden.ropa_epis_fuera)}</td>
           <td class="celda-flecha">➜</td>
@@ -415,7 +419,7 @@ function generarHojaAuditoria(auditoria) {
           </td>
         </tr>
         ` : ''}
-        <tr class="${!orden.lugar_guardar ? 'fila-requiere-accion' : ''}">
+        <tr class="${orden.lugar_guardar === false ? 'fila-requiere-accion' : ''}">
           <td>¿Hay un lugar donde guardar cada cosa encontrada?</td>
           <td class="celda-centro">${siNo(orden.lugar_guardar, true)}</td>
           <td class="celda-flecha">➜</td>
@@ -438,13 +442,13 @@ function generarHojaAuditoria(auditoria) {
         </tr>
       </thead>
       <tbody>
-        <tr class="${limpieza.area_sucia ? 'fila-requiere-accion' : ''}">
+        <tr class="${limpieza.area_sucia === true ? 'fila-requiere-accion' : ''}">
           <td>¿Está el área sucia (polvo, basura)?</td>
           <td class="celda-centro">${siNo(limpieza.area_sucia)}</td>
           <td class="celda-flecha">➜</td>
           <td>${formatearAccion('Recoger y desechar residuos. Barrer.')}</td>
         </tr>
-        <tr class="${!limpieza.area_residuos ? 'fila-requiere-accion' : ''}">
+        <tr class="${limpieza.area_residuos === false ? 'fila-requiere-accion' : ''}">
           <td>¿Está el área libre de residuos (pallets, embalajes, aceites...)?</td>
           <td class="celda-centro">${siNo(limpieza.area_residuos, true)}</td>
           <td class="celda-flecha">➜</td>
@@ -467,31 +471,31 @@ function generarHojaAuditoria(auditoria) {
         </tr>
       </thead>
       <tbody>
-        <tr class="${!inspeccion.salidas_gas_precintadas ? 'fila-requiere-accion' : ''}">
+        <tr class="${inspeccion.salidas_gas_precintadas === false ? 'fila-requiere-accion' : ''}">
           <td>¿Todas las salidas de gas están precintadas?</td>
           <td class="celda-centro">${siNo(inspeccion.salidas_gas_precintadas, true)}</td>
           <td class="celda-flecha">➜</td>
           <td>${formatearAccion('Precintar de inmediato')}</td>
         </tr>
-        <tr class="${!inspeccion.riesgos_carteles ? 'fila-requiere-accion' : ''}">
+        <tr class="${inspeccion.riesgos_carteles === false ? 'fila-requiere-accion' : ''}">
           <td>¿Todos los riesgos están identificados en carteles?</td>
           <td class="celda-centro">${siNo(inspeccion.riesgos_carteles, true)}</td>
           <td class="celda-flecha">➜</td>
           <td>${formatearAccion('Indicar para compra de carteles')}</td>
         </tr>
-        <tr class="${!inspeccion.zonas_delimitadas ? 'fila-requiere-accion' : ''}">
+        <tr class="${inspeccion.zonas_delimitadas === false ? 'fila-requiere-accion' : ''}">
           <td>¿Están correctamente delimitadas las zonas de trabajo?</td>
           <td class="celda-centro">${siNo(inspeccion.zonas_delimitadas, true)}</td>
           <td class="celda-flecha">➜</td>
           <td>${formatearAccion('Delimitar zonas correctamente')}</td>
         </tr>
-        <tr class="${!inspeccion.cuadros_electricos_ok ? 'fila-requiere-accion' : ''}">
+        <tr class="${inspeccion.cuadros_electricos_ok === false ? 'fila-requiere-accion' : ''}">
           <td>¿Los cuadros eléctricos están cerrados y sin roturas?</td>
           <td class="celda-centro">${siNo(inspeccion.cuadros_electricos_ok, true)}</td>
           <td class="celda-flecha">➜</td>
           <td>${formatearAccion('Cerrar/reparar cuadros eléctricos')}</td>
         </tr>
-        <tr class="${!inspeccion.aire_comprimido_ok ? 'fila-requiere-accion' : ''}">
+        <tr class="${inspeccion.aire_comprimido_ok === false ? 'fila-requiere-accion' : ''}">
           <td>¿Las tomas de aire comprimido están en buen estado?</td>
           <td class="celda-centro">${siNo(inspeccion.aire_comprimido_ok, true)}</td>
           <td class="celda-flecha">➜</td>
@@ -679,4 +683,9 @@ function confirmarEliminar(id) {
   } else {
     document.getElementById('modal-eliminar').classList.add('show');
   }
+}
+
+// Redirigir al formulario en modo edición
+function modificarAuditoria(id) {
+  window.location.href = `/?editar=${id}`;
 }
