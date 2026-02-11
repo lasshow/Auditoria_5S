@@ -1106,12 +1106,23 @@ async function cargarAuditoriaParaEditar(id) {
           });
         }
       });
+
+      // Limpiar línea vacía de "lugar" (no tiene desglose almacenado)
+      const desgloseContainerLugar = document.getElementById('desglose-lugar');
+      if (desgloseContainerLugar) desgloseContainerLugar.innerHTML = '';
+      DesgloseManager.configs.orden.contadores.lugar = 0;
     }
 
     // Poblar limpieza
     if (data.limpieza) {
       poblarSelectSiNo('area_sucia', data.limpieza.area_sucia);
       poblarSelectSiNo('area_residuos', data.limpieza.area_residuos);
+      // Limpiar líneas vacías creadas por los eventos change (no hay desgloses almacenados para limpieza)
+      ['suciedad', 'residuos'].forEach(cat => {
+        const desgloseContainer = document.getElementById(`desglose-${cat}`);
+        if (desgloseContainer) desgloseContainer.innerHTML = '';
+        DesgloseManager.configs.limpieza.contadores[cat] = 0;
+      });
     }
 
     // Poblar inspección
@@ -1121,6 +1132,12 @@ async function cargarAuditoriaParaEditar(id) {
       poblarSelectSiNo('zonas_delimitadas', data.inspeccion.zonas_delimitadas);
       poblarSelectSiNo('cuadros_electricos_ok', data.inspeccion.cuadros_electricos_ok);
       poblarSelectSiNo('aire_comprimido_ok', data.inspeccion.aire_comprimido_ok);
+      // Limpiar líneas vacías creadas por los eventos change (no hay desgloses almacenados para inspección)
+      ['gas', 'carteles', 'zonas', 'electricos', 'aire'].forEach(cat => {
+        const desgloseContainer = document.getElementById(`desglose-${cat}`);
+        if (desgloseContainer) desgloseContainer.innerHTML = '';
+        DesgloseManager.configs.inspeccion.contadores[cat] = 0;
+      });
     }
 
   } catch (error) {
