@@ -905,12 +905,7 @@ async function handleFormSubmit(e) {
 
       // Resetear modo edición
       if (modoEdicion) {
-        modoEdicion = false;
-        auditoriaEditarId = null;
-        const btnGuardar = document.getElementById('btn-guardar');
-        if (btnGuardar) btnGuardar.textContent = 'Guardar Auditoría';
-        // Limpiar parámetro de URL
-        window.history.replaceState({}, '', '/');
+        resetearModoEdicion();
       }
     } else {
       alert(`Error al guardar: ${result.error}`);
@@ -933,11 +928,7 @@ function limpiarFormularioSinConfirmar() {
 
   // Resetear modo edición si estaba activo
   if (modoEdicion) {
-    modoEdicion = false;
-    auditoriaEditarId = null;
-    const btnGuardar = document.getElementById('btn-guardar');
-    if (btnGuardar) btnGuardar.textContent = 'Guardar Auditoría';
-    window.history.replaceState({}, '', '/');
+    resetearModoEdicion();
   }
 
   document.querySelectorAll('.parcela-area').forEach(area => area.classList.remove('selected'));
@@ -1011,9 +1002,11 @@ async function cargarAuditoriaParaEditar(id) {
     modoEdicion = true;
     auditoriaEditarId = id;
 
-    // Cambiar título del botón guardar
+    // Mostrar botón "Guardar Modificación", ocultar "Guardar Auditoría"
     const btnGuardar = document.getElementById('btn-guardar');
-    if (btnGuardar) btnGuardar.textContent = 'Actualizar Auditoría';
+    const btnModificar = document.getElementById('btn-guardar-modificacion');
+    if (btnGuardar) btnGuardar.style.display = 'none';
+    if (btnModificar) btnModificar.style.display = '';
 
     // Poblar datos generales
     const fechaInput = document.getElementById('fecha');
@@ -1080,6 +1073,8 @@ async function cargarAuditoriaParaEditar(id) {
     // Poblar orden
     if (data.orden) {
       const ord = data.orden;
+
+      // Primero establecer valores de los selects (dispara change -> crea líneas vacías)
       poblarSelectSiNo('herramienta_fuera', ord.herramienta_fuera);
       poblarSelectSiNo('eslingas_fuera', ord.eslingas_fuera);
       poblarSelectSiNo('maquinas_fuera', ord.maquinas_fuera);
@@ -1089,11 +1084,16 @@ async function cargarAuditoriaParaEditar(id) {
       const ordenDetalle = document.getElementById('orden_detalle');
       if (ordenDetalle) ordenDetalle.value = ord.lugar_guardar_detalle || '';
 
-      // Poblar desgloses de orden
-      const categoriasOrden = ['herramienta', 'eslingas', 'maquinas', 'ropa'];
-      categoriasOrden.forEach(cat => {
+      // Poblar desgloses de orden: limpiar líneas vacías y re-poblar con datos reales
+      ['herramienta', 'eslingas', 'maquinas', 'ropa'].forEach(cat => {
         const items = ord[`desglose_${cat}`];
         if (items && items.length > 0) {
+          // Limpiar la línea vacía que creó el evento change
+          DesgloseManager.ocultar('orden', cat);
+          // Mostrar la fila de nuevo
+          const row = document.getElementById(`desglose-${cat}-row`);
+          if (row) row.style.display = '';
+          // Poblar con datos reales
           items.forEach(item => {
             DesgloseManager.agregarLinea('orden', cat);
             const lineaNum = DesgloseManager.configs.orden.contadores[cat];
@@ -1145,4 +1145,14 @@ function poblarSelectSiNo(elementId, valor) {
 
   // Disparar el evento change para que se muestren/oculten los desgloses
   select.dispatchEvent(new Event('change'));
+}
+
+function resetearModoEdicion() {
+  modoEdicion = false;
+  auditoriaEditarId = null;
+  const btnGuardar = document.getElementById('btn-guardar');
+  const btnModificar = document.getElementById('btn-guardar-modificacion');
+  if (btnGuardar) btnGuardar.style.display = '';
+  if (btnModificar) btnModificar.style.display = 'none';
+  window.history.replaceState({}, '', '/');
 }
