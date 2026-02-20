@@ -111,9 +111,20 @@ const Validator = {
     const parcelasValidas = [
       'Parcela horno grande 1', 'Parcela horno grande 2', 'Parcela horno grande 3 (FRB)',
       'Parcela horno pequeño 1', 'Dojo de formación', 'Af. Pack & Build',
-      'Af. Ventiladores', 'Parcela BEAS', 'AF1', 'Patio exterior'
+      'Af. Ventiladores', 'Parcela BEAS', 'AF1', 'Patio exterior',
+      'Taller Eléctrico'
     ];
     return parcelasValidas.includes(value);
+  },
+
+  isValidPuesto(value) {
+    const puestosValidos = [
+      'Puesto de Canaleta', 'Puesto de Preparación de Cables 1',
+      'Puesto de Preparación de Cables 2', 'Puesto de Montaje 1',
+      'Puesto de Montaje 2', 'Mecanizado de Tapas',
+      'Puesto de Cajas Pequeñas', 'Cableado Intermodular'
+    ];
+    return puestosValidos.includes(value);
   },
 
   isValidBoolean(value) {
@@ -312,7 +323,49 @@ async function initDatabase() {
       )
     `);
 
+    // Columna puesto para Taller Eléctrico (NULL para auditorías normales)
+    await client.query(`ALTER TABLE auditorias ADD COLUMN IF NOT EXISTS puesto TEXT`);
+
+    // Tabla de respuestas del Taller Eléctrico
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS respuestas_taller_electrico (
+        id SERIAL PRIMARY KEY,
+        auditoria_id INTEGER NOT NULL REFERENCES auditorias(id) ON DELETE CASCADE,
+        org_innecesarios BOOLEAN,
+        org_innecesarios_detalle TEXT,
+        org_procedimientos BOOLEAN,
+        org_procedimientos_detalle TEXT,
+        org_identificacion BOOLEAN,
+        org_identificacion_detalle TEXT,
+        ord_fuera_lugar BOOLEAN,
+        ord_fuera_lugar_detalle TEXT,
+        ord_suelo BOOLEAN,
+        ord_suelo_detalle TEXT,
+        ord_herramientas_id BOOLEAN,
+        ord_herramientas_id_detalle TEXT,
+        lim_puestos_limpios BOOLEAN,
+        lim_puestos_limpios_detalle TEXT,
+        lim_utiles BOOLEAN,
+        lim_utiles_detalle TEXT,
+        lim_procedimientos BOOLEAN,
+        lim_procedimientos_detalle TEXT,
+        cv_pregunta10 BOOLEAN,
+        cv_pregunta10_detalle TEXT,
+        cv_anomalias BOOLEAN,
+        cv_anomalias_detalle TEXT,
+        cv_pregunta12 BOOLEAN,
+        cv_pregunta12_detalle TEXT,
+        disc_pregunta13 BOOLEAN,
+        disc_pregunta13_detalle TEXT,
+        disc_paseos BOOLEAN,
+        disc_paseos_detalle TEXT,
+        disc_acciones_plazo BOOLEAN,
+        disc_acciones_plazo_detalle TEXT
+      )
+    `);
+
     // Crear índices
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_resp_taller_auditoria ON respuestas_taller_electrico(auditoria_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_auditorias_fecha ON auditorias(fecha)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_auditorias_parcela ON auditorias(parcela)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_auditorias_fecha_parcela ON auditorias(fecha, parcela)`);
@@ -343,7 +396,7 @@ app.get('/health', (req, res) => {
 // Obtener todas las auditorías
 app.get('/api/auditorias', async (req, res) => {
   try {
-    const auditorias = await queryAll('SELECT * FROM auditorias ORDER BY created_at DESC');
+    const auditorias = await queryAll('SELECT id, fecha, parcela, auditor, puesto, created_at FROM auditorias ORDER BY created_at DESC');
     res.json(auditorias);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -365,36 +418,47 @@ app.get('/api/auditorias/:id', async (req, res) => {
       return res.status(404).json({ error: 'Auditoría no encontrada' });
     }
 
-    const clasificacion = await queryOne('SELECT * FROM respuestas_clasificacion WHERE auditoria_id = $1', [id]);
-    const orden = await queryOne('SELECT * FROM respuestas_orden WHERE auditoria_id = $1', [id]);
-    const limpieza = await queryOne('SELECT * FROM respuestas_limpieza WHERE auditoria_id = $1', [id]);
-    const inspeccion = await queryOne('SELECT * FROM respuestas_inspeccion WHERE auditoria_id = $1', [id]);
-    const acciones = await queryAll('SELECT * FROM acciones_correctivas WHERE auditoria_id = $1', [id]);
-    const desgloseDesconocidos = await queryAll('SELECT * FROM desglose_innecesarios WHERE auditoria_id = $1 AND categoria = $2', [id, 'desconocidos']);
-    const desgloseNoFullkit = await queryAll('SELECT * FROM desglose_innecesarios WHERE auditoria_id = $1 AND categoria = $2', [id, 'no_fullkit']);
-    const desgloseHerramienta = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'herramienta']);
-    const desgloseEslingas = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'eslingas']);
-    const desgloseMaquinas = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'maquinas']);
-    const desgloseRopa = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'ropa']);
+    // Si es Taller Eléctrico, leer de respuestas_taller_electrico
+    if (auditoria.puesto) {
+      const taller_electrico = await queryOne('SELECT * FROM respuestas_taller_electrico WHERE auditoria_id = $1', [id]);
+      const acciones = await queryAll('SELECT * FROM acciones_correctivas WHERE auditoria_id = $1', [id]);
+      res.json({
+        ...auditoria,
+        taller_electrico,
+        acciones
+      });
+    } else {
+      const clasificacion = await queryOne('SELECT * FROM respuestas_clasificacion WHERE auditoria_id = $1', [id]);
+      const orden = await queryOne('SELECT * FROM respuestas_orden WHERE auditoria_id = $1', [id]);
+      const limpieza = await queryOne('SELECT * FROM respuestas_limpieza WHERE auditoria_id = $1', [id]);
+      const inspeccion = await queryOne('SELECT * FROM respuestas_inspeccion WHERE auditoria_id = $1', [id]);
+      const acciones = await queryAll('SELECT * FROM acciones_correctivas WHERE auditoria_id = $1', [id]);
+      const desgloseDesconocidos = await queryAll('SELECT * FROM desglose_innecesarios WHERE auditoria_id = $1 AND categoria = $2', [id, 'desconocidos']);
+      const desgloseNoFullkit = await queryAll('SELECT * FROM desglose_innecesarios WHERE auditoria_id = $1 AND categoria = $2', [id, 'no_fullkit']);
+      const desgloseHerramienta = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'herramienta']);
+      const desgloseEslingas = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'eslingas']);
+      const desgloseMaquinas = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'maquinas']);
+      const desgloseRopa = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1 AND categoria = $2', [id, 'ropa']);
 
-    res.json({
-      ...auditoria,
-      clasificacion: clasificacion ? {
-        ...clasificacion,
-        desglose_desconocidos: desgloseDesconocidos,
-        desglose_no_fullkit: desgloseNoFullkit
-      } : null,
-      orden: orden ? {
-        ...orden,
-        desglose_herramienta: desgloseHerramienta,
-        desglose_eslingas: desgloseEslingas,
-        desglose_maquinas: desgloseMaquinas,
-        desglose_ropa: desgloseRopa
-      } : null,
-      limpieza,
-      inspeccion,
-      acciones
-    });
+      res.json({
+        ...auditoria,
+        clasificacion: clasificacion ? {
+          ...clasificacion,
+          desglose_desconocidos: desgloseDesconocidos,
+          desglose_no_fullkit: desgloseNoFullkit
+        } : null,
+        orden: orden ? {
+          ...orden,
+          desglose_herramienta: desgloseHerramienta,
+          desglose_eslingas: desgloseEslingas,
+          desglose_maquinas: desgloseMaquinas,
+          desglose_ropa: desgloseRopa
+        } : null,
+        limpieza,
+        inspeccion,
+        acciones
+      });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -404,7 +468,7 @@ app.get('/api/auditorias/:id', async (req, res) => {
 app.post('/api/auditorias', async (req, res) => {
   const client = await pool.connect();
   try {
-    const { fecha, parcela, auditor, clasificacion, orden, limpieza, inspeccion, acciones } = req.body;
+    const { fecha, parcela, auditor, puesto, taller_electrico, clasificacion, orden, limpieza, inspeccion, acciones } = req.body;
 
     if (!Validator.isValidDate(fecha)) {
       return res.status(400).json({ error: 'Fecha inválida. Formato esperado: YYYY-MM-DD' });
@@ -414,19 +478,62 @@ app.post('/api/auditorias', async (req, res) => {
       return res.status(400).json({ error: 'Parcela inválida o no reconocida' });
     }
 
+    // Validación específica para Taller Eléctrico
+    if (parcela === 'Taller Eléctrico') {
+      if (!puesto || !Validator.isValidPuesto(puesto)) {
+        return res.status(400).json({ error: 'Puesto inválido para Taller Eléctrico' });
+      }
+    }
+
     const auditorSanitizado = Validator.sanitizeString(auditor || 'Sin especificar', 100);
 
     await client.query('BEGIN');
 
-    // Insertar auditoría principal
+    // Insertar auditoría principal (con puesto si es Taller Eléctrico)
+    const puestoValue = parcela === 'Taller Eléctrico' ? puesto : null;
     const auditoriaResult = await client.query(
-      'INSERT INTO auditorias (fecha, parcela, auditor) VALUES ($1, $2, $3) RETURNING id',
-      [fecha, parcela, auditorSanitizado]
+      'INSERT INTO auditorias (fecha, parcela, auditor, puesto) VALUES ($1, $2, $3, $4) RETURNING id',
+      [fecha, parcela, auditorSanitizado, puestoValue]
     );
     const auditoriaId = auditoriaResult.rows[0].id;
 
-    // Insertar respuestas de clasificación
-    if (clasificacion) {
+    // Si es Taller Eléctrico, insertar en respuestas_taller_electrico
+    if (parcela === 'Taller Eléctrico' && taller_electrico) {
+      const te = taller_electrico;
+      await client.query(
+        `INSERT INTO respuestas_taller_electrico
+        (auditoria_id, org_innecesarios, org_innecesarios_detalle, org_procedimientos, org_procedimientos_detalle,
+         org_identificacion, org_identificacion_detalle, ord_fuera_lugar, ord_fuera_lugar_detalle,
+         ord_suelo, ord_suelo_detalle, ord_herramientas_id, ord_herramientas_id_detalle,
+         lim_puestos_limpios, lim_puestos_limpios_detalle, lim_utiles, lim_utiles_detalle,
+         lim_procedimientos, lim_procedimientos_detalle, cv_pregunta10, cv_pregunta10_detalle,
+         cv_anomalias, cv_anomalias_detalle, cv_pregunta12, cv_pregunta12_detalle,
+         disc_pregunta13, disc_pregunta13_detalle, disc_paseos, disc_paseos_detalle,
+         disc_acciones_plazo, disc_acciones_plazo_detalle)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`,
+        [
+          auditoriaId,
+          Validator.toDbBoolean(te.org_innecesarios), Validator.sanitizeString(te.org_innecesarios_detalle || ''),
+          Validator.toDbBoolean(te.org_procedimientos), Validator.sanitizeString(te.org_procedimientos_detalle || ''),
+          Validator.toDbBoolean(te.org_identificacion), Validator.sanitizeString(te.org_identificacion_detalle || ''),
+          Validator.toDbBoolean(te.ord_fuera_lugar), Validator.sanitizeString(te.ord_fuera_lugar_detalle || ''),
+          Validator.toDbBoolean(te.ord_suelo), Validator.sanitizeString(te.ord_suelo_detalle || ''),
+          Validator.toDbBoolean(te.ord_herramientas_id), Validator.sanitizeString(te.ord_herramientas_id_detalle || ''),
+          Validator.toDbBoolean(te.lim_puestos_limpios), Validator.sanitizeString(te.lim_puestos_limpios_detalle || ''),
+          Validator.toDbBoolean(te.lim_utiles), Validator.sanitizeString(te.lim_utiles_detalle || ''),
+          Validator.toDbBoolean(te.lim_procedimientos), Validator.sanitizeString(te.lim_procedimientos_detalle || ''),
+          Validator.toDbBoolean(te.cv_pregunta10), Validator.sanitizeString(te.cv_pregunta10_detalle || ''),
+          Validator.toDbBoolean(te.cv_anomalias), Validator.sanitizeString(te.cv_anomalias_detalle || ''),
+          Validator.toDbBoolean(te.cv_pregunta12), Validator.sanitizeString(te.cv_pregunta12_detalle || ''),
+          Validator.toDbBoolean(te.disc_pregunta13), Validator.sanitizeString(te.disc_pregunta13_detalle || ''),
+          Validator.toDbBoolean(te.disc_paseos), Validator.sanitizeString(te.disc_paseos_detalle || ''),
+          Validator.toDbBoolean(te.disc_acciones_plazo), Validator.sanitizeString(te.disc_acciones_plazo_detalle || '')
+        ]
+      );
+    }
+
+    // Insertar respuestas de clasificación (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && clasificacion) {
       await client.query(
         `INSERT INTO respuestas_clasificacion
         (auditoria_id, innecesarios_desconocidos, listado_desconocidos, innecesarios_no_fullkit, listado_no_fullkit)
@@ -462,8 +569,8 @@ app.post('/api/auditorias', async (req, res) => {
       }
     }
 
-    // Insertar respuestas de orden
-    if (orden) {
+    // Insertar respuestas de orden (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && orden) {
       await client.query(
         `INSERT INTO respuestas_orden
         (auditoria_id, herramienta_fuera, herramienta_detalle, eslingas_fuera, eslingas_detalle,
@@ -500,8 +607,8 @@ app.post('/api/auditorias', async (req, res) => {
       }
     }
 
-    // Insertar respuestas de limpieza
-    if (limpieza) {
+    // Insertar respuestas de limpieza (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && limpieza) {
       await client.query(
         `INSERT INTO respuestas_limpieza
         (auditoria_id, area_sucia, area_sucia_detalle, area_residuos, area_residuos_detalle)
@@ -516,8 +623,8 @@ app.post('/api/auditorias', async (req, res) => {
       );
     }
 
-    // Insertar respuestas de inspección
-    if (inspeccion) {
+    // Insertar respuestas de inspección (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && inspeccion) {
       await client.query(
         `INSERT INTO respuestas_inspeccion
         (auditoria_id, salidas_gas_precintadas, riesgos_carteles, zonas_delimitadas,
@@ -585,7 +692,7 @@ app.put('/api/auditorias/:id', async (req, res) => {
       return res.status(404).json({ error: 'Auditoría no encontrada' });
     }
 
-    const { fecha, parcela, auditor, clasificacion, orden, limpieza, inspeccion, acciones } = req.body;
+    const { fecha, parcela, auditor, puesto, taller_electrico, clasificacion, orden, limpieza, inspeccion, acciones } = req.body;
 
     if (!Validator.isValidDate(fecha)) {
       return res.status(400).json({ error: 'Fecha inválida. Formato esperado: YYYY-MM-DD' });
@@ -595,14 +702,21 @@ app.put('/api/auditorias/:id', async (req, res) => {
       return res.status(400).json({ error: 'Parcela inválida o no reconocida' });
     }
 
+    if (parcela === 'Taller Eléctrico') {
+      if (!puesto || !Validator.isValidPuesto(puesto)) {
+        return res.status(400).json({ error: 'Puesto inválido para Taller Eléctrico' });
+      }
+    }
+
     const auditorSanitizado = Validator.sanitizeString(auditor || 'Sin especificar', 100);
+    const puestoValue = parcela === 'Taller Eléctrico' ? puesto : null;
 
     await client.query('BEGIN');
 
     // Actualizar auditoría principal
     await client.query(
-      'UPDATE auditorias SET fecha = $1, parcela = $2, auditor = $3 WHERE id = $4',
-      [fecha, parcela, auditorSanitizado, id]
+      'UPDATE auditorias SET fecha = $1, parcela = $2, auditor = $3, puesto = $4 WHERE id = $5',
+      [fecha, parcela, auditorSanitizado, puestoValue, id]
     );
 
     // Eliminar datos hijos existentes y re-insertar
@@ -612,10 +726,46 @@ app.put('/api/auditorias/:id', async (req, res) => {
     await client.query('DELETE FROM desglose_orden WHERE auditoria_id = $1', [id]);
     await client.query('DELETE FROM respuestas_limpieza WHERE auditoria_id = $1', [id]);
     await client.query('DELETE FROM respuestas_inspeccion WHERE auditoria_id = $1', [id]);
+    await client.query('DELETE FROM respuestas_taller_electrico WHERE auditoria_id = $1', [id]);
     await client.query('DELETE FROM acciones_correctivas WHERE auditoria_id = $1', [id]);
 
-    // Re-insertar respuestas de clasificación
-    if (clasificacion) {
+    // Si es Taller Eléctrico, insertar en respuestas_taller_electrico
+    if (parcela === 'Taller Eléctrico' && taller_electrico) {
+      const te = taller_electrico;
+      await client.query(
+        `INSERT INTO respuestas_taller_electrico
+        (auditoria_id, org_innecesarios, org_innecesarios_detalle, org_procedimientos, org_procedimientos_detalle,
+         org_identificacion, org_identificacion_detalle, ord_fuera_lugar, ord_fuera_lugar_detalle,
+         ord_suelo, ord_suelo_detalle, ord_herramientas_id, ord_herramientas_id_detalle,
+         lim_puestos_limpios, lim_puestos_limpios_detalle, lim_utiles, lim_utiles_detalle,
+         lim_procedimientos, lim_procedimientos_detalle, cv_pregunta10, cv_pregunta10_detalle,
+         cv_anomalias, cv_anomalias_detalle, cv_pregunta12, cv_pregunta12_detalle,
+         disc_pregunta13, disc_pregunta13_detalle, disc_paseos, disc_paseos_detalle,
+         disc_acciones_plazo, disc_acciones_plazo_detalle)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`,
+        [
+          id,
+          Validator.toDbBoolean(te.org_innecesarios), Validator.sanitizeString(te.org_innecesarios_detalle || ''),
+          Validator.toDbBoolean(te.org_procedimientos), Validator.sanitizeString(te.org_procedimientos_detalle || ''),
+          Validator.toDbBoolean(te.org_identificacion), Validator.sanitizeString(te.org_identificacion_detalle || ''),
+          Validator.toDbBoolean(te.ord_fuera_lugar), Validator.sanitizeString(te.ord_fuera_lugar_detalle || ''),
+          Validator.toDbBoolean(te.ord_suelo), Validator.sanitizeString(te.ord_suelo_detalle || ''),
+          Validator.toDbBoolean(te.ord_herramientas_id), Validator.sanitizeString(te.ord_herramientas_id_detalle || ''),
+          Validator.toDbBoolean(te.lim_puestos_limpios), Validator.sanitizeString(te.lim_puestos_limpios_detalle || ''),
+          Validator.toDbBoolean(te.lim_utiles), Validator.sanitizeString(te.lim_utiles_detalle || ''),
+          Validator.toDbBoolean(te.lim_procedimientos), Validator.sanitizeString(te.lim_procedimientos_detalle || ''),
+          Validator.toDbBoolean(te.cv_pregunta10), Validator.sanitizeString(te.cv_pregunta10_detalle || ''),
+          Validator.toDbBoolean(te.cv_anomalias), Validator.sanitizeString(te.cv_anomalias_detalle || ''),
+          Validator.toDbBoolean(te.cv_pregunta12), Validator.sanitizeString(te.cv_pregunta12_detalle || ''),
+          Validator.toDbBoolean(te.disc_pregunta13), Validator.sanitizeString(te.disc_pregunta13_detalle || ''),
+          Validator.toDbBoolean(te.disc_paseos), Validator.sanitizeString(te.disc_paseos_detalle || ''),
+          Validator.toDbBoolean(te.disc_acciones_plazo), Validator.sanitizeString(te.disc_acciones_plazo_detalle || '')
+        ]
+      );
+    }
+
+    // Re-insertar respuestas de clasificación (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && clasificacion) {
       await client.query(
         `INSERT INTO respuestas_clasificacion
         (auditoria_id, innecesarios_desconocidos, listado_desconocidos, innecesarios_no_fullkit, listado_no_fullkit)
@@ -650,8 +800,8 @@ app.put('/api/auditorias/:id', async (req, res) => {
       }
     }
 
-    // Re-insertar respuestas de orden
-    if (orden) {
+    // Re-insertar respuestas de orden (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && orden) {
       await client.query(
         `INSERT INTO respuestas_orden
         (auditoria_id, herramienta_fuera, herramienta_detalle, eslingas_fuera, eslingas_detalle,
@@ -687,8 +837,8 @@ app.put('/api/auditorias/:id', async (req, res) => {
       }
     }
 
-    // Re-insertar respuestas de limpieza
-    if (limpieza) {
+    // Re-insertar respuestas de limpieza (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && limpieza) {
       await client.query(
         `INSERT INTO respuestas_limpieza
         (auditoria_id, area_sucia, area_sucia_detalle, area_residuos, area_residuos_detalle)
@@ -703,8 +853,8 @@ app.put('/api/auditorias/:id', async (req, res) => {
       );
     }
 
-    // Re-insertar respuestas de inspección
-    if (inspeccion) {
+    // Re-insertar respuestas de inspección (solo para auditorías normales)
+    if (parcela !== 'Taller Eléctrico' && inspeccion) {
       await client.query(
         `INSERT INTO respuestas_inspeccion
         (auditoria_id, salidas_gas_precintadas, riesgos_carteles, zonas_delimitadas,
@@ -929,16 +1079,21 @@ app.get('/api/backup/json', verificarAdmin, async (req, res) => {
     const auditorias = await queryAll('SELECT * FROM auditorias ORDER BY fecha DESC');
 
     const datosCompletos = await Promise.all(auditorias.map(async (auditoria) => {
-      return {
+      const base = {
         ...auditoria,
-        clasificacion: await queryOne('SELECT * FROM respuestas_clasificacion WHERE auditoria_id = $1', [auditoria.id]),
-        orden: await queryOne('SELECT * FROM respuestas_orden WHERE auditoria_id = $1', [auditoria.id]),
-        limpieza: await queryOne('SELECT * FROM respuestas_limpieza WHERE auditoria_id = $1', [auditoria.id]),
-        inspeccion: await queryOne('SELECT * FROM respuestas_inspeccion WHERE auditoria_id = $1', [auditoria.id]),
-        desglose_innecesarios: await queryAll('SELECT * FROM desglose_innecesarios WHERE auditoria_id = $1', [auditoria.id]),
-        desglose_orden: await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1', [auditoria.id]),
         acciones: await queryAll('SELECT * FROM acciones_correctivas WHERE auditoria_id = $1', [auditoria.id])
       };
+      if (auditoria.puesto) {
+        base.taller_electrico = await queryOne('SELECT * FROM respuestas_taller_electrico WHERE auditoria_id = $1', [auditoria.id]);
+      } else {
+        base.clasificacion = await queryOne('SELECT * FROM respuestas_clasificacion WHERE auditoria_id = $1', [auditoria.id]);
+        base.orden = await queryOne('SELECT * FROM respuestas_orden WHERE auditoria_id = $1', [auditoria.id]);
+        base.limpieza = await queryOne('SELECT * FROM respuestas_limpieza WHERE auditoria_id = $1', [auditoria.id]);
+        base.inspeccion = await queryOne('SELECT * FROM respuestas_inspeccion WHERE auditoria_id = $1', [auditoria.id]);
+        base.desglose_innecesarios = await queryAll('SELECT * FROM desglose_innecesarios WHERE auditoria_id = $1', [auditoria.id]);
+        base.desglose_orden = await queryAll('SELECT * FROM desglose_orden WHERE auditoria_id = $1', [auditoria.id]);
+      }
+      return base;
     }));
 
     const fecha = new Date().toISOString().split('T')[0];
@@ -958,6 +1113,7 @@ app.get('/api/backup/csv', verificarAdmin, async (req, res) => {
         a.id,
         a.fecha,
         a.parcela,
+        a.puesto,
         a.auditor,
         a.created_at,
         COALESCE(rc.innecesarios_desconocidos, 0) as innecesarios_desconocidos,
@@ -991,7 +1147,7 @@ app.get('/api/backup/csv', verificarAdmin, async (req, res) => {
 
     // Crear CSV
     const headers = [
-      'ID', 'Fecha', 'Parcela', 'Auditor', 'Creado',
+      'ID', 'Fecha', 'Parcela', 'Puesto', 'Auditor', 'Creado',
       'Innecesarios Desconocidos', 'Innecesarios No FullKit', 'Total Innecesarios',
       'Herramienta Fuera', 'Herramienta Detalle',
       'Eslingas Fuera', 'Eslingas Detalle',
@@ -1016,6 +1172,7 @@ app.get('/api/backup/csv', verificarAdmin, async (req, res) => {
       a.id,
       a.fecha ? new Date(a.fecha).toISOString().split('T')[0] : '',
       a.parcela,
+      a.puesto || '',
       a.auditor,
       a.created_at ? new Date(a.created_at).toISOString() : '',
       a.innecesarios_desconocidos,

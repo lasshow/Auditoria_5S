@@ -88,7 +88,7 @@ function renderizarTabla() {
     <tr>
       <td><strong>#${auditoria.id}</strong></td>
       <td>${formatearFecha(auditoria.fecha)}</td>
-      <td>${auditoria.parcela}</td>
+      <td>${auditoria.puesto ? auditoria.parcela + ' &rsaquo; ' + auditoria.puesto : auditoria.parcela}</td>
       <td>${auditoria.auditor || '-'}</td>
       <td>
         <button class="btn btn-info btn-small" onclick="verDetalles(${auditoria.id})">Ver</button>
@@ -219,6 +219,11 @@ function imprimirHoja() {
 
 // Generar hoja de auditoría completa para impresión
 function generarHojaAuditoria(auditoria) {
+  // Si es Taller Eléctrico, generar hoja específica
+  if (auditoria.puesto) {
+    return generarHojaTallerElectrico(auditoria);
+  }
+
   const clasificacion = auditoria.clasificacion || {};
   const orden = auditoria.orden || {};
   const limpieza = auditoria.limpieza || {};
@@ -688,4 +693,211 @@ function confirmarEliminar(id) {
 // Redirigir al formulario en modo edición
 function modificarAuditoria(id) {
   window.location.href = `/?editar=${id}`;
+}
+
+// ==================== HOJA TALLER ELÉCTRICO ====================
+
+// Preguntas variables por puesto (duplicado del frontend para la hoja imprimible)
+const PREGUNTAS_POR_PUESTO_HIST = {
+  'Puesto de Montaje 1': {
+    p10: '¿Están colocados los indicadores de los armarios?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Están ordenados los materiales en la playa exterior?'
+  },
+  'Puesto de Montaje 2': {
+    p10: '¿Están colocados los indicadores de los armarios?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Están ordenados los materiales en la playa exterior?'
+  },
+  'Puesto de Preparación de Cables 1': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Los cables están bien identificados?',
+    p13: '¿Se han vaciado los residuos de cables?'
+  },
+  'Puesto de Preparación de Cables 2': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Los cables están bien identificados?',
+    p13: '¿Se han vaciado los residuos de cables?'
+  },
+  'Cableado Intermodular': {
+    p10: '¿Están completas las herramientas?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Están preparados los materiales para la siguiente tarea?'
+  },
+  'Puesto de Canaleta': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Se han depositado los recortes en su contenedor?'
+  },
+  'Mecanizado de Tapas': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Quedan recortes fuera de los lugares correspondientes?'
+  },
+  'Puesto de Cajas Pequeñas': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Quedan recortes fuera de los lugares correspondientes?'
+  }
+};
+
+function generarHojaTallerElectrico(auditoria) {
+  const te = auditoria.taller_electrico || {};
+  const preguntas = PREGUNTAS_POR_PUESTO_HIST[auditoria.puesto] || {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '(Seleccionar puesto para ver pregunta)'
+  };
+
+  const siNo = (valor, invertir = false) => {
+    if (valor === null || valor === undefined) {
+      return '<span class="respuesta-valor valor-na">NA</span>';
+    }
+    const hayProblema = invertir ? !valor : valor;
+    const texto = valor ? 'SI' : 'NO';
+    const clase = hayProblema ? 'valor-problema' : 'valor-ok';
+    return '<span class="respuesta-valor ' + clase + '">' + texto + '</span>';
+  };
+
+  const filaTE = (pregunta, campo, invertir = false) => {
+    const valor = te[campo];
+    const detalle = te[campo + '_detalle'] || '';
+    const hayProblema = valor !== null && valor !== undefined && (invertir ? !valor : valor);
+    return `
+      <tr class="${hayProblema ? 'fila-requiere-accion' : ''}">
+        <td>${pregunta}</td>
+        <td class="celda-centro">${siNo(valor, invertir)}</td>
+        <td>${detalle}</td>
+      </tr>
+    `;
+  };
+
+  return `
+    <div class="hoja-header">
+      <div class="hoja-logo">AUDITORÍA 5S GHI</div>
+      <div class="hoja-info">
+        <div class="hoja-titulo">Auditoría Taller Eléctrico</div>
+        <div class="hoja-subtitulo">${auditoria.puesto}</div>
+      </div>
+      <div class="hoja-empresa">
+        <strong>GHI Smart Furnaces</strong><br>
+        Barrio de Aperribai, 4<br>
+        48960 Galdakao
+      </div>
+    </div>
+
+    <div class="hoja-datos-generales">
+      <div class="dato-general">
+        <span class="dato-label">Fecha:</span>
+        <span class="dato-valor">${formatearFecha(auditoria.fecha)}</span>
+      </div>
+      <div class="dato-general">
+        <span class="dato-label">Parcela:</span>
+        <span class="dato-valor dato-parcela">Taller Eléctrico</span>
+      </div>
+      <div class="dato-general">
+        <span class="dato-label">Puesto:</span>
+        <span class="dato-valor dato-parcela">${auditoria.puesto}</span>
+      </div>
+      <div class="dato-general">
+        <span class="dato-label">Auditor:</span>
+        <span class="dato-valor">${auditoria.auditor || '-'}</span>
+      </div>
+    </div>
+
+    <!-- A: ORGANIZACIÓN -->
+    <table class="hoja-tabla">
+      <thead>
+        <tr><th class="hoja-header-seccion" colspan="3">A - ORGANIZACIÓN</th></tr>
+        <tr class="hoja-subheader">
+          <th width="55%">Pregunta</th>
+          <th width="10%">Resultado</th>
+          <th width="35%">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filaTE('1. ¿Vuelven a proliferar cosas innecesarias en el puesto?', 'org_innecesarios')}
+        ${filaTE('2. ¿Se cumplen los procedimientos?', 'org_procedimientos', true)}
+        ${filaTE('3. ¿Están en buen estado los signos de identificación?', 'org_identificacion', true)}
+      </tbody>
+    </table>
+
+    <!-- B: ORDEN -->
+    <table class="hoja-tabla">
+      <thead>
+        <tr><th class="hoja-header-seccion" colspan="3">B - ORDEN</th></tr>
+        <tr class="hoja-subheader">
+          <th width="55%">Pregunta</th>
+          <th width="10%">Resultado</th>
+          <th width="35%">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filaTE('4. ¿Hay cosas fuera de los lugares marcados?', 'ord_fuera_lugar')}
+        ${filaTE('5. ¿Hay elementos colocados sobre el suelo?', 'ord_suelo')}
+        ${filaTE('6. ¿Las herramientas están identificadas a nivel micro?', 'ord_herramientas_id', true)}
+      </tbody>
+    </table>
+
+    <!-- C: LIMPIEZA -->
+    <table class="hoja-tabla">
+      <thead>
+        <tr><th class="hoja-header-seccion" colspan="3">C - LIMPIEZA</th></tr>
+        <tr class="hoja-subheader">
+          <th width="55%">Pregunta</th>
+          <th width="10%">Resultado</th>
+          <th width="35%">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filaTE('7. ¿Están limpios los puestos de trabajo?', 'lim_puestos_limpios', true)}
+        ${filaTE('8. ¿Hay útiles de limpieza en los lugares definidos?', 'lim_utiles', true)}
+        ${filaTE('9. ¿Se cumplen los procedimientos de limpieza?', 'lim_procedimientos', true)}
+      </tbody>
+    </table>
+
+    <!-- D: CONTROL VISUAL -->
+    <table class="hoja-tabla">
+      <thead>
+        <tr><th class="hoja-header-seccion" colspan="3">D - CONTROL VISUAL</th></tr>
+        <tr class="hoja-subheader">
+          <th width="55%">Pregunta</th>
+          <th width="10%">Resultado</th>
+          <th width="35%">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filaTE('10. ' + preguntas.p10, 'cv_pregunta10', true)}
+        ${filaTE('11. ¿Hay planes de reacción ante anomalías en los puestos?', 'cv_anomalias', true)}
+        ${filaTE('12. ' + preguntas.p12, 'cv_pregunta12', true)}
+      </tbody>
+    </table>
+
+    <!-- E: DISCIPLINA Y HÁBITO -->
+    <table class="hoja-tabla">
+      <thead>
+        <tr><th class="hoja-header-seccion" colspan="3">E - DISCIPLINA Y HÁBITO</th></tr>
+        <tr class="hoja-subheader">
+          <th width="55%">Pregunta</th>
+          <th width="10%">Resultado</th>
+          <th width="35%">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filaTE('13. ' + preguntas.p13, 'disc_pregunta13', true)}
+        ${filaTE('14. ¿Se cumple el plan de paseos?', 'disc_paseos', true)}
+        ${filaTE('15. ¿Se ejecutan las acciones correctivas en plazo?', 'disc_acciones_plazo', true)}
+      </tbody>
+    </table>
+
+    <div class="hoja-footer">
+      <div class="firma-seccion">
+        <div class="firma-linea"></div>
+        <div class="firma-label">Firma responsable</div>
+      </div>
+      <div class="hoja-fecha-impresion">
+        Generado: ${new Date().toLocaleDateString('es-ES')} | Auditoría #${auditoria.id}
+      </div>
+    </div>
+  `;
 }

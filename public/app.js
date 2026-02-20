@@ -13,6 +13,54 @@
 let modoEdicion = false;
 let auditoriaEditarId = null;
 
+// Variables para modo Taller Eléctrico
+let modoTallerElectrico = false;
+let puestoSeleccionado = null;
+
+// Preguntas variables por puesto
+const PREGUNTAS_POR_PUESTO = {
+  'Puesto de Montaje 1': {
+    p10: '¿Están colocados los indicadores de los armarios?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Están ordenados los materiales en la playa exterior?'
+  },
+  'Puesto de Montaje 2': {
+    p10: '¿Están colocados los indicadores de los armarios?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Están ordenados los materiales en la playa exterior?'
+  },
+  'Puesto de Preparación de Cables 1': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Los cables están bien identificados?',
+    p13: '¿Se han vaciado los residuos de cables?'
+  },
+  'Puesto de Preparación de Cables 2': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Los cables están bien identificados?',
+    p13: '¿Se han vaciado los residuos de cables?'
+  },
+  'Cableado Intermodular': {
+    p10: '¿Están completas las herramientas?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Están preparados los materiales para la siguiente tarea?'
+  },
+  'Puesto de Canaleta': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Se han depositado los recortes en su contenedor?'
+  },
+  'Mecanizado de Tapas': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Quedan recortes fuera de los lugares correspondientes?'
+  },
+  'Puesto de Cajas Pequeñas': {
+    p10: '¿Hay signos visuales para control máximo y mínimo de stock?',
+    p12: '¿Están indicados los lugares donde se pueden producir accidentes?',
+    p13: '¿Quedan recortes fuera de los lugares correspondientes?'
+  }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
   await cargarPersonalizados();
 
@@ -795,6 +843,8 @@ function initializeMapInteraction() {
       parcelaRadios.forEach(radio => {
         if (radio.value === parcelaValue) radio.checked = true;
       });
+      // Activar/desactivar modo taller eléctrico
+      toggleModoTallerElectrico(parcelaValue === 'Taller Eléctrico');
     });
   });
 
@@ -805,8 +855,101 @@ function initializeMapInteraction() {
         area.classList.remove('selected');
         if (area.dataset.parcela === selectedValue) area.classList.add('selected');
       });
+      toggleModoTallerElectrico(selectedValue === 'Taller Eléctrico');
     });
   });
+
+  // Interacción del mapa del taller eléctrico
+  initializeTallerElectricoMap();
+}
+
+function toggleModoTallerElectrico(activar) {
+  modoTallerElectrico = activar;
+
+  const mapaGeneral = document.getElementById('mapa-parcelas').parentElement;
+  const mapaTaller = document.getElementById('mapa-taller-container');
+  const puestoSelector = document.getElementById('puesto-selector');
+  const seccionesTaller = document.getElementById('secciones-taller-electrico');
+
+  // Secciones del formulario normal (tablas de auditoría)
+  const seccionesNormales = document.querySelectorAll('.audit-table:not(.taller-electrico-table)');
+
+  if (activar) {
+    mapaGeneral.style.display = 'none';
+    mapaTaller.style.display = '';
+    puestoSelector.style.display = '';
+    seccionesTaller.style.display = '';
+    seccionesNormales.forEach(s => s.style.display = 'none');
+  } else {
+    mapaGeneral.style.display = '';
+    mapaTaller.style.display = 'none';
+    puestoSelector.style.display = 'none';
+    seccionesTaller.style.display = 'none';
+    seccionesNormales.forEach(s => s.style.display = '');
+    // Limpiar selección de puesto
+    puestoSeleccionado = null;
+    document.querySelectorAll('input[name="puesto"]').forEach(r => r.checked = false);
+    document.querySelectorAll('.puesto-area').forEach(a => a.classList.remove('selected'));
+  }
+}
+
+function initializeTallerElectricoMap() {
+  const puestoAreas = document.querySelectorAll('.puesto-area');
+  const puestoRadios = document.querySelectorAll('input[name="puesto"]');
+  const btnVolver = document.getElementById('btn-volver-mapa');
+
+  // Clic en SVG del taller
+  puestoAreas.forEach(area => {
+    area.addEventListener('click', () => {
+      const puestoValue = area.dataset.puesto;
+      puestoAreas.forEach(a => a.classList.remove('selected'));
+      area.classList.add('selected');
+      puestoRadios.forEach(radio => {
+        if (radio.value === puestoValue) radio.checked = true;
+      });
+      seleccionarPuesto(puestoValue);
+    });
+  });
+
+  // Clic en radio buttons de puestos
+  puestoRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      const selectedValue = radio.value;
+      puestoAreas.forEach(area => {
+        area.classList.remove('selected');
+        if (area.dataset.puesto === selectedValue) area.classList.add('selected');
+      });
+      seleccionarPuesto(selectedValue);
+    });
+  });
+
+  // Botón volver al mapa general
+  if (btnVolver) {
+    btnVolver.addEventListener('click', () => {
+      // Deseleccionar Taller Eléctrico
+      document.querySelectorAll('input[name="parcela"]').forEach(r => r.checked = false);
+      document.querySelectorAll('.parcela-area').forEach(a => a.classList.remove('selected'));
+      toggleModoTallerElectrico(false);
+    });
+  }
+}
+
+function seleccionarPuesto(puesto) {
+  puestoSeleccionado = puesto;
+  actualizarPreguntasVariables(puesto);
+}
+
+function actualizarPreguntasVariables(puesto) {
+  const preguntas = PREGUNTAS_POR_PUESTO[puesto];
+  if (!preguntas) return;
+
+  const p10 = document.getElementById('te_pregunta10_texto');
+  const p12 = document.getElementById('te_pregunta12_texto');
+  const p13 = document.getElementById('te_pregunta13_texto');
+
+  if (p10) p10.textContent = '10. ' + preguntas.p10;
+  if (p12) p12.textContent = '12. ' + preguntas.p12;
+  if (p13) p13.textContent = '13. ' + preguntas.p13;
 }
 
 function initializeFormHandlers() {
@@ -835,55 +978,106 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  const auditoriaData = {
-    fecha: fecha,
-    parcela: parcela.value,
-    auditor: document.getElementById('auditor').value || 'Sin especificar',
+  // Si es Taller Eléctrico, validar que haya un puesto seleccionado
+  if (parcela.value === 'Taller Eléctrico' && !puestoSeleccionado) {
+    alert('Por favor, selecciona un puesto del Taller Eléctrico.');
+    return;
+  }
 
-    clasificacion: {
-      innecesarios_desconocidos: obtenerCantidadInnecesarios('desconocidos'),
-      listado_desconocidos: document.getElementById('listado_desconocidos').value,
-      innecesarios_no_fullkit: obtenerCantidadInnecesarios('nofullkit'),
-      listado_no_fullkit: document.getElementById('listado_no_fullkit').value,
-      desglose_desconocidos: obtenerDatosDesglose('desconocidos'),
-      desglose_no_fullkit: obtenerDatosDesglose('nofullkit')
-    },
+  let auditoriaData;
 
-    orden: {
-      herramienta_fuera: document.getElementById('herramienta_fuera').value,
-      herramienta_detalle: '',
-      desglose_herramienta: obtenerDatosDesgloseOrden('herramienta'),
-      eslingas_fuera: document.getElementById('eslingas_fuera').value,
-      eslingas_detalle: '',
-      desglose_eslingas: obtenerDatosDesgloseOrden('eslingas'),
-      maquinas_fuera: document.getElementById('maquinas_fuera').value,
-      maquinas_detalle: '',
-      desglose_maquinas: obtenerDatosDesgloseOrden('maquinas'),
-      ropa_epis_fuera: document.getElementById('ropa_epis_fuera').value,
-      ropa_epis_detalle: '',
-      desglose_ropa: obtenerDatosDesgloseOrden('ropa'),
-      lugar_guardar: document.getElementById('lugar_guardar').value,
-      lugar_guardar_detalle: document.getElementById('orden_detalle')?.value || ''
-    },
+  if (parcela.value === 'Taller Eléctrico') {
+    // Recoger datos del formulario del Taller Eléctrico
+    auditoriaData = {
+      fecha: fecha,
+      parcela: parcela.value,
+      auditor: document.getElementById('auditor').value || 'Sin especificar',
+      puesto: puestoSeleccionado,
+      taller_electrico: {
+        org_innecesarios: document.getElementById('te_org_innecesarios').value,
+        org_innecesarios_detalle: document.getElementById('te_org_innecesarios_detalle').value,
+        org_procedimientos: document.getElementById('te_org_procedimientos').value,
+        org_procedimientos_detalle: document.getElementById('te_org_procedimientos_detalle').value,
+        org_identificacion: document.getElementById('te_org_identificacion').value,
+        org_identificacion_detalle: document.getElementById('te_org_identificacion_detalle').value,
+        ord_fuera_lugar: document.getElementById('te_ord_fuera_lugar').value,
+        ord_fuera_lugar_detalle: document.getElementById('te_ord_fuera_lugar_detalle').value,
+        ord_suelo: document.getElementById('te_ord_suelo').value,
+        ord_suelo_detalle: document.getElementById('te_ord_suelo_detalle').value,
+        ord_herramientas_id: document.getElementById('te_ord_herramientas_id').value,
+        ord_herramientas_id_detalle: document.getElementById('te_ord_herramientas_id_detalle').value,
+        lim_puestos_limpios: document.getElementById('te_lim_puestos_limpios').value,
+        lim_puestos_limpios_detalle: document.getElementById('te_lim_puestos_limpios_detalle').value,
+        lim_utiles: document.getElementById('te_lim_utiles').value,
+        lim_utiles_detalle: document.getElementById('te_lim_utiles_detalle').value,
+        lim_procedimientos: document.getElementById('te_lim_procedimientos').value,
+        lim_procedimientos_detalle: document.getElementById('te_lim_procedimientos_detalle').value,
+        cv_pregunta10: document.getElementById('te_cv_pregunta10').value,
+        cv_pregunta10_detalle: document.getElementById('te_cv_pregunta10_detalle').value,
+        cv_anomalias: document.getElementById('te_cv_anomalias').value,
+        cv_anomalias_detalle: document.getElementById('te_cv_anomalias_detalle').value,
+        cv_pregunta12: document.getElementById('te_cv_pregunta12').value,
+        cv_pregunta12_detalle: document.getElementById('te_cv_pregunta12_detalle').value,
+        disc_pregunta13: document.getElementById('te_disc_pregunta13').value,
+        disc_pregunta13_detalle: document.getElementById('te_disc_pregunta13_detalle').value,
+        disc_paseos: document.getElementById('te_disc_paseos').value,
+        disc_paseos_detalle: document.getElementById('te_disc_paseos_detalle').value,
+        disc_acciones_plazo: document.getElementById('te_disc_acciones_plazo').value,
+        disc_acciones_plazo_detalle: document.getElementById('te_disc_acciones_plazo_detalle').value
+      },
+      acciones: []
+    };
+  } else {
+    auditoriaData = {
+      fecha: fecha,
+      parcela: parcela.value,
+      auditor: document.getElementById('auditor').value || 'Sin especificar',
 
-    limpieza: {
-      area_sucia: document.getElementById('area_sucia').value,
-      area_sucia_detalle: '',
-      area_residuos: document.getElementById('area_residuos').value,
-      area_residuos_detalle: ''
-    },
+      clasificacion: {
+        innecesarios_desconocidos: obtenerCantidadInnecesarios('desconocidos'),
+        listado_desconocidos: document.getElementById('listado_desconocidos').value,
+        innecesarios_no_fullkit: obtenerCantidadInnecesarios('nofullkit'),
+        listado_no_fullkit: document.getElementById('listado_no_fullkit').value,
+        desglose_desconocidos: obtenerDatosDesglose('desconocidos'),
+        desglose_no_fullkit: obtenerDatosDesglose('nofullkit')
+      },
 
-    inspeccion: {
-      salidas_gas_precintadas: document.getElementById('salidas_gas_precintadas').value,
-      riesgos_carteles: document.getElementById('riesgos_carteles').value,
-      zonas_delimitadas: document.getElementById('zonas_delimitadas').value,
-      cuadros_electricos_ok: document.getElementById('cuadros_electricos_ok').value,
-      aire_comprimido_ok: document.getElementById('aire_comprimido_ok').value,
-      inspeccion_detalle: ''
-    },
+      orden: {
+        herramienta_fuera: document.getElementById('herramienta_fuera').value,
+        herramienta_detalle: '',
+        desglose_herramienta: obtenerDatosDesgloseOrden('herramienta'),
+        eslingas_fuera: document.getElementById('eslingas_fuera').value,
+        eslingas_detalle: '',
+        desglose_eslingas: obtenerDatosDesgloseOrden('eslingas'),
+        maquinas_fuera: document.getElementById('maquinas_fuera').value,
+        maquinas_detalle: '',
+        desglose_maquinas: obtenerDatosDesgloseOrden('maquinas'),
+        ropa_epis_fuera: document.getElementById('ropa_epis_fuera').value,
+        ropa_epis_detalle: '',
+        desglose_ropa: obtenerDatosDesgloseOrden('ropa'),
+        lugar_guardar: document.getElementById('lugar_guardar').value,
+        lugar_guardar_detalle: document.getElementById('orden_detalle')?.value || ''
+      },
 
-    acciones: []
-  };
+      limpieza: {
+        area_sucia: document.getElementById('area_sucia').value,
+        area_sucia_detalle: '',
+        area_residuos: document.getElementById('area_residuos').value,
+        area_residuos_detalle: ''
+      },
+
+      inspeccion: {
+        salidas_gas_precintadas: document.getElementById('salidas_gas_precintadas').value,
+        riesgos_carteles: document.getElementById('riesgos_carteles').value,
+        zonas_delimitadas: document.getElementById('zonas_delimitadas').value,
+        cuadros_electricos_ok: document.getElementById('cuadros_electricos_ok').value,
+        aire_comprimido_ok: document.getElementById('aire_comprimido_ok').value,
+        inspeccion_detalle: ''
+      },
+
+      acciones: []
+    };
+  }
 
   try {
     const url = modoEdicion ? `/api/auditorias/${auditoriaEditarId}` : '/api/auditorias';
@@ -929,6 +1123,11 @@ function limpiarFormularioSinConfirmar() {
   // Resetear modo edición si estaba activo
   if (modoEdicion) {
     resetearModoEdicion();
+  }
+
+  // Resetear modo taller eléctrico
+  if (modoTallerElectrico) {
+    toggleModoTallerElectrico(false);
   }
 
   document.querySelectorAll('.parcela-area').forEach(area => area.classList.remove('selected'));
@@ -1031,6 +1230,54 @@ async function cargarAuditoriaParaEditar(id) {
       area.classList.remove('selected');
       if (area.dataset.parcela === data.parcela) area.classList.add('selected');
     });
+
+    // Si es Taller Eléctrico, activar modo taller y poblar datos
+    if (data.puesto) {
+      toggleModoTallerElectrico(true);
+
+      // Seleccionar puesto
+      const puestoRadios = document.querySelectorAll('input[name="puesto"]');
+      puestoRadios.forEach(radio => {
+        if (radio.value === data.puesto) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change'));
+        }
+      });
+      document.querySelectorAll('.puesto-area').forEach(area => {
+        area.classList.remove('selected');
+        if (area.dataset.puesto === data.puesto) area.classList.add('selected');
+      });
+      seleccionarPuesto(data.puesto);
+
+      // Poblar formulario del taller
+      if (data.taller_electrico) {
+        const te = data.taller_electrico;
+        const campos = [
+          'org_innecesarios', 'org_procedimientos', 'org_identificacion',
+          'ord_fuera_lugar', 'ord_suelo', 'ord_herramientas_id',
+          'lim_puestos_limpios', 'lim_utiles', 'lim_procedimientos',
+          'cv_pregunta10', 'cv_anomalias', 'cv_pregunta12',
+          'disc_pregunta13', 'disc_paseos', 'disc_acciones_plazo'
+        ];
+        campos.forEach(campo => {
+          const select = document.getElementById(`te_${campo}`);
+          const detalle = document.getElementById(`te_${campo}_detalle`);
+          if (select) {
+            if (te[campo] === null || te[campo] === undefined) {
+              select.value = 'na';
+            } else if (te[campo] === true) {
+              select.value = 'si';
+            } else if (te[campo] === false) {
+              select.value = 'no';
+            } else {
+              select.value = '';
+            }
+          }
+          if (detalle) detalle.value = te[`${campo}_detalle`] || '';
+        });
+      }
+      return; // No poblar formulario normal
+    }
 
     // Poblar clasificación
     if (data.clasificacion) {

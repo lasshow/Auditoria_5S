@@ -36,6 +36,13 @@
           <!-- Fondo general de la nave -->
           <rect x="0" y="0" width="700" height="450" fill="#e8e8e8" stroke="#999" stroke-width="2"/>
 
+          <!-- TALLER ELÉCTRICO -->
+          <g class="parcela-area" data-parcela="Taller Eléctrico">
+            <rect x="10" y="10" width="80" height="110" fill="#c0c0c0" stroke="#c00" stroke-width="3" stroke-dasharray="8,4"/>
+            <text x="50" y="55" text-anchor="middle" class="parcela-label-dark">Taller</text>
+            <text x="50" y="73" text-anchor="middle" class="parcela-label-dark">Eléctrico</text>
+          </g>
+
           <!-- DOJO DE FORMACIÓN -->
           <g class="parcela-area" data-parcela="Dojo de formación">
             <rect x="10" y="310" width="130" height="90" fill="#b0b0b0" stroke="#c00" stroke-width="3" stroke-dasharray="8,4"/>
@@ -122,6 +129,68 @@
         </svg>
       </div>
 
+      <!-- MAPA INTERNO TALLER ELÉCTRICO (oculto por defecto) -->
+      <div id="mapa-taller-container" class="mapa-container-pdf" style="display: none;">
+        <h3>TALLER ELÉCTRICO — Seleccionar puesto:</h3>
+        <button type="button" id="btn-volver-mapa" class="btn btn-secondary btn-small" style="margin-bottom: 10px;">&#8592; Volver al mapa general</button>
+        <svg id="mapa-taller-electrico" viewBox="0 0 600 400" class="mapa-svg">
+          <rect x="0" y="0" width="600" height="400" fill="#e8e8e8" stroke="#999" stroke-width="2"/>
+
+          <!-- Puesto de Cajas Pequeñas -->
+          <g class="puesto-area" data-puesto="Puesto de Cajas Pequeñas">
+            <rect x="10" y="10" width="150" height="120" fill="#7ecef4" stroke="#2196f3" stroke-width="2"/>
+            <text x="85" y="65" text-anchor="middle" class="parcela-label-dark">Cajas</text>
+            <text x="85" y="83" text-anchor="middle" class="parcela-label-dark">Pequeñas</text>
+          </g>
+
+          <!-- Mecanizado de Tapas -->
+          <g class="puesto-area" data-puesto="Mecanizado de Tapas">
+            <rect x="10" y="140" width="150" height="120" fill="#ff9966" stroke="#e65c00" stroke-width="2"/>
+            <text x="85" y="195" text-anchor="middle" class="parcela-label-dark">Mecanizado</text>
+            <text x="85" y="213" text-anchor="middle" class="parcela-label-dark">de Tapas</text>
+          </g>
+
+          <!-- Cableado Intermodular (centro) -->
+          <g class="puesto-area" data-puesto="Cableado Intermodular">
+            <rect x="170" y="10" width="150" height="250" fill="#9966cc" stroke="#6a3d9a" stroke-width="2"/>
+            <text x="245" y="125" text-anchor="middle" class="parcela-label-white">Cableado</text>
+            <text x="245" y="145" text-anchor="middle" class="parcela-label-white">Intermodular</text>
+          </g>
+
+          <!-- Puesto de Montaje 1 -->
+          <g class="puesto-area" data-puesto="Puesto de Montaje 1">
+            <rect x="330" y="10" width="260" height="120" fill="#d32f2f" stroke="#8B0000" stroke-width="2"/>
+            <text x="460" y="65" text-anchor="middle" class="parcela-label-white">Montaje 1</text>
+          </g>
+
+          <!-- Puesto de Montaje 2 -->
+          <g class="puesto-area" data-puesto="Puesto de Montaje 2">
+            <rect x="330" y="140" width="260" height="120" fill="#5c85d6" stroke="#1a53a5" stroke-width="2"/>
+            <text x="460" y="195" text-anchor="middle" class="parcela-label-white">Montaje 2</text>
+          </g>
+
+          <!-- Puesto de Preparación de Cables 1 -->
+          <g class="puesto-area" data-puesto="Puesto de Preparación de Cables 1">
+            <rect x="400" y="270" width="190" height="55" fill="#f5d742" stroke="#c9a800" stroke-width="2"/>
+            <text x="495" y="303" text-anchor="middle" class="parcela-label-dark">Prep. Cables 1</text>
+          </g>
+
+          <!-- Puesto de Preparación de Cables 2 -->
+          <g class="puesto-area" data-puesto="Puesto de Preparación de Cables 2">
+            <rect x="400" y="335" width="190" height="55" fill="#4caf50" stroke="#2e7d32" stroke-width="2"/>
+            <text x="495" y="368" text-anchor="middle" class="parcela-label-white">Prep. Cables 2</text>
+          </g>
+
+          <!-- Puesto de Canaleta -->
+          <g class="puesto-area" data-puesto="Puesto de Canaleta">
+            <rect x="10" y="270" width="380" height="120" fill="#ff69b4" stroke="#d63384" stroke-width="2"/>
+            <text x="200" y="335" text-anchor="middle" class="parcela-label-white">Puesto de Canaleta</text>
+          </g>
+
+          <text x="300" y="398" text-anchor="middle" class="leyenda">Haz clic en un puesto para seleccionarlo</text>
+        </svg>
+      </div>
+
       <div class="parcela-selector-pdf">
         <h3>SEÑALAR LA PARCELA INSPECCIONADA:</h3>
         <div class="parcela-list">
@@ -135,6 +204,21 @@
           <label class="parcela-radio color-rosa"><input type="radio" name="parcela" value="Parcela BEAS"> Parcela BEAS</label>
           <label class="parcela-radio color-naranja"><input type="radio" name="parcela" value="AF1"> AF1</label>
           <label class="parcela-radio color-marron"><input type="radio" name="parcela" value="Patio exterior"> Patio exterior</label>
+          <label class="parcela-radio color-taller-electrico"><input type="radio" name="parcela" value="Taller Eléctrico"> Taller Eléctrico</label>
+        </div>
+        <!-- Selector de puestos del Taller Eléctrico (oculto por defecto) -->
+        <div id="puesto-selector" style="display: none; margin-top: 10px;">
+          <h4 style="margin-bottom: 8px; color: #8B0000;">Seleccionar puesto:</h4>
+          <div class="parcela-list">
+            <label class="parcela-radio color-rosa"><input type="radio" name="puesto" value="Puesto de Canaleta"> Puesto de Canaleta</label>
+            <label class="parcela-radio color-amarillo"><input type="radio" name="puesto" value="Puesto de Preparación de Cables 1"> Prep. Cables 1</label>
+            <label class="parcela-radio color-verde"><input type="radio" name="puesto" value="Puesto de Preparación de Cables 2"> Prep. Cables 2</label>
+            <label class="parcela-radio color-rojo"><input type="radio" name="puesto" value="Puesto de Montaje 1"> Montaje 1</label>
+            <label class="parcela-radio color-azul"><input type="radio" name="puesto" value="Puesto de Montaje 2"> Montaje 2</label>
+            <label class="parcela-radio color-naranja"><input type="radio" name="puesto" value="Mecanizado de Tapas"> Mecanizado de Tapas</label>
+            <label class="parcela-radio color-celeste"><input type="radio" name="puesto" value="Puesto de Cajas Pequeñas"> Cajas Pequeñas</label>
+            <label class="parcela-radio color-morado"><input type="radio" name="puesto" value="Cableado Intermodular"> Cableado Intermodular</label>
+          </div>
         </div>
         <div class="auditor-field-pdf">
           <label>Auditor:</label>
@@ -587,6 +671,206 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- ========== FORMULARIO TALLER ELÉCTRICO (oculto por defecto) ========== -->
+      <div id="secciones-taller-electrico" style="display: none;">
+
+        <!-- SECCIÓN A: ORGANIZACIÓN -->
+        <table class="audit-table taller-electrico-table">
+          <thead>
+            <tr>
+              <th class="header-red" colspan="2">A - ORGANIZACIÓN</th>
+              <th class="header-red-dark" colspan="1">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="question-cell">1. ¿Vuelven a proliferar cosas innecesarias en el puesto?</td>
+              <td class="check-cell">
+                <select id="te_org_innecesarios" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_org_innecesarios_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">2. ¿Se cumplen los procedimientos?</td>
+              <td class="check-cell">
+                <select id="te_org_procedimientos" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_org_procedimientos_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">3. ¿Están en buen estado los signos de identificación?</td>
+              <td class="check-cell">
+                <select id="te_org_identificacion" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_org_identificacion_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- SECCIÓN B: ORDEN -->
+        <table class="audit-table taller-electrico-table">
+          <thead>
+            <tr>
+              <th class="header-red" colspan="2">B - ORDEN</th>
+              <th class="header-red-dark" colspan="1">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="question-cell">4. ¿Hay cosas fuera de los lugares marcados?</td>
+              <td class="check-cell">
+                <select id="te_ord_fuera_lugar" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_ord_fuera_lugar_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">5. ¿Hay elementos colocados sobre el suelo?</td>
+              <td class="check-cell">
+                <select id="te_ord_suelo" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_ord_suelo_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">6. ¿Las herramientas están identificadas a nivel micro en los puestos?</td>
+              <td class="check-cell">
+                <select id="te_ord_herramientas_id" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_ord_herramientas_id_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- SECCIÓN C: LIMPIEZA -->
+        <table class="audit-table taller-electrico-table">
+          <thead>
+            <tr>
+              <th class="header-red" colspan="2">C - LIMPIEZA</th>
+              <th class="header-red-dark" colspan="1">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="question-cell">7. ¿Están limpios los puestos de trabajo?</td>
+              <td class="check-cell">
+                <select id="te_lim_puestos_limpios" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_lim_puestos_limpios_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">8. ¿Hay útiles de limpieza en los lugares definidos?</td>
+              <td class="check-cell">
+                <select id="te_lim_utiles" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_lim_utiles_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">9. ¿Se cumplen los procedimientos de limpieza?</td>
+              <td class="check-cell">
+                <select id="te_lim_procedimientos" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_lim_procedimientos_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- SECCIÓN D: CONTROL VISUAL -->
+        <table class="audit-table taller-electrico-table">
+          <thead>
+            <tr>
+              <th class="header-red" colspan="2">D - CONTROL VISUAL</th>
+              <th class="header-red-dark" colspan="1">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="question-cell" id="te_pregunta10_texto">10. ¿Hay signos visuales para control máximo y mínimo de stock?</td>
+              <td class="check-cell">
+                <select id="te_cv_pregunta10" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_cv_pregunta10_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">11. ¿Hay planes de reacción ante anomalías en los puestos?</td>
+              <td class="check-cell">
+                <select id="te_cv_anomalias" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_cv_anomalias_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell" id="te_pregunta12_texto">12. ¿Están indicados los lugares donde se pueden producir accidentes?</td>
+              <td class="check-cell">
+                <select id="te_cv_pregunta12" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_cv_pregunta12_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- SECCIÓN E: DISCIPLINA Y HÁBITO -->
+        <table class="audit-table taller-electrico-table">
+          <thead>
+            <tr>
+              <th class="header-red" colspan="2">E - DISCIPLINA Y HÁBITO</th>
+              <th class="header-red-dark" colspan="1">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="question-cell" id="te_pregunta13_texto">13. (Seleccionar puesto para ver pregunta)</td>
+              <td class="check-cell">
+                <select id="te_disc_pregunta13" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_disc_pregunta13_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">14. ¿Se cumple el plan de paseos?</td>
+              <td class="check-cell">
+                <select id="te_disc_paseos" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_disc_paseos_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+            <tr>
+              <td class="question-cell">15. ¿Se ejecutan las acciones correctivas en plazo?</td>
+              <td class="check-cell">
+                <select id="te_disc_acciones_plazo" class="select-sino">
+                  <option value="">-</option><option value="si">SI</option><option value="no">NO</option><option value="na">NA</option>
+                </select>
+              </td>
+              <td class="action-cell"><input type="text" id="te_disc_acciones_plazo_detalle" class="full-input" placeholder="Detalle..."></td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
 
       <!-- BOTONES DE ACCIÓN -->
       <div class="form-actions">

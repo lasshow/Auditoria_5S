@@ -164,6 +164,7 @@ body {
 .color-rosa { border-left-color: #ff69b4; }
 .color-naranja { border-left-color: #ff9966; }
 .color-marron { border-left-color: #8B4513; }
+.color-taller-electrico { border-left-color: #c00; border-left-style: dashed; }
 
 .auditor-field-pdf {
   margin-top: 15px;
@@ -180,6 +181,48 @@ body {
   flex: 1;
   padding: 8px;
   border: 2px solid #333;
+}
+
+/* ==================== TALLER ELÉCTRICO ==================== */
+.puesto-area {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.puesto-area:hover rect {
+  stroke-width: 4 !important;
+  filter: brightness(1.1);
+}
+
+.puesto-area.selected rect {
+  stroke: #000 !important;
+  stroke-width: 5 !important;
+}
+
+.taller-electrico-table .question-cell {
+  width: 55%;
+}
+
+.taller-electrico-table .check-cell {
+  width: 10%;
+}
+
+.taller-electrico-table .action-cell {
+  width: 35%;
+}
+
+.full-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+body.dark-mode .full-input {
+  background: #0f3460;
+  color: #e0e0e0;
+  border-color: #666;
 }
 
 /* ==================== TABLAS DE AUDITORÍA ==================== */
