@@ -38,7 +38,7 @@
 
           <!-- TALLER ELÉCTRICO -->
           <g class="parcela-area" data-parcela="Taller Eléctrico">
-            <rect x="10" y="10" width="80" height="110" fill="#c0c0c0" stroke="#c00" stroke-width="3" stroke-dasharray="8,4"/>
+            <rect x="10" y="10" width="80" height="115" fill="#c0c0c0" stroke="#c00" stroke-width="3" stroke-dasharray="8,4"/>
             <text x="50" y="55" text-anchor="middle" class="parcela-label-dark">Taller</text>
             <text x="50" y="73" text-anchor="middle" class="parcela-label-dark">Eléctrico</text>
           </g>
@@ -133,61 +133,56 @@
       <div id="mapa-taller-container" class="mapa-container-pdf" style="display: none;">
         <h3>TALLER ELÉCTRICO — Seleccionar puesto:</h3>
         <button type="button" id="btn-volver-mapa" class="btn btn-secondary btn-small" style="margin-bottom: 10px;">&#8592; Volver al mapa general</button>
-        <svg id="mapa-taller-electrico" viewBox="0 0 600 400" class="mapa-svg">
-          <rect x="0" y="0" width="600" height="400" fill="#e8e8e8" stroke="#999" stroke-width="2"/>
+        <svg id="mapa-taller-electrico" viewBox="0 0 600 500" class="mapa-svg">
+          <rect x="0" y="0" width="600" height="500" fill="#e8e8e8" stroke="#999" stroke-width="2"/>
 
-          <!-- Puesto de Cajas Pequeñas -->
+          <!-- Fila superior izquierda: Cajas Pequeñas + Mecanizado de Tapas -->
           <g class="puesto-area" data-puesto="Puesto de Cajas Pequeñas">
-            <rect x="10" y="10" width="150" height="120" fill="#7ecef4" stroke="#2196f3" stroke-width="2"/>
-            <text x="85" y="65" text-anchor="middle" class="parcela-label-dark">Cajas</text>
-            <text x="85" y="83" text-anchor="middle" class="parcela-label-dark">Pequeñas</text>
+            <rect x="10" y="10" width="145" height="120" fill="#7ecef4" stroke="#2196f3" stroke-width="2"/>
+            <text x="82" y="65" text-anchor="middle" class="parcela-label-dark">Cajas</text>
+            <text x="82" y="83" text-anchor="middle" class="parcela-label-dark">Pequeñas</text>
           </g>
 
-          <!-- Mecanizado de Tapas -->
           <g class="puesto-area" data-puesto="Mecanizado de Tapas">
-            <rect x="10" y="140" width="150" height="120" fill="#ff9966" stroke="#e65c00" stroke-width="2"/>
-            <text x="85" y="195" text-anchor="middle" class="parcela-label-dark">Mecanizado</text>
-            <text x="85" y="213" text-anchor="middle" class="parcela-label-dark">de Tapas</text>
+            <rect x="165" y="10" width="165" height="120" fill="#ff9966" stroke="#e65c00" stroke-width="2"/>
+            <text x="247" y="60" text-anchor="middle" class="parcela-label-dark">Mecanizado</text>
+            <text x="247" y="80" text-anchor="middle" class="parcela-label-dark">de Tapas</text>
           </g>
 
-          <!-- Cableado Intermodular (centro) -->
+          <!-- Cableado Intermodular (gran área inferior izquierda) -->
           <g class="puesto-area" data-puesto="Cableado Intermodular">
-            <rect x="170" y="10" width="150" height="250" fill="#9966cc" stroke="#6a3d9a" stroke-width="2"/>
-            <text x="245" y="125" text-anchor="middle" class="parcela-label-white">Cableado</text>
-            <text x="245" y="145" text-anchor="middle" class="parcela-label-white">Intermodular</text>
+            <rect x="10" y="140" width="320" height="350" fill="#9966cc" stroke="#6a3d9a" stroke-width="2"/>
+            <text x="170" y="305" text-anchor="middle" class="parcela-label-white">Cableado</text>
+            <text x="170" y="330" text-anchor="middle" class="parcela-label-white">Intermodular</text>
           </g>
 
-          <!-- Puesto de Montaje 1 -->
-          <g class="puesto-area" data-puesto="Puesto de Montaje 1">
-            <rect x="330" y="10" width="260" height="120" fill="#d32f2f" stroke="#8B0000" stroke-width="2"/>
-            <text x="460" y="65" text-anchor="middle" class="parcela-label-white">Montaje 1</text>
-          </g>
-
-          <!-- Puesto de Montaje 2 -->
+          <!-- Columna derecha: Montaje 2, Montaje 1, Prep Cables 2, Prep Cables 1, Canaletas -->
           <g class="puesto-area" data-puesto="Puesto de Montaje 2">
-            <rect x="330" y="140" width="260" height="120" fill="#5c85d6" stroke="#1a53a5" stroke-width="2"/>
-            <text x="460" y="195" text-anchor="middle" class="parcela-label-white">Montaje 2</text>
+            <rect x="340" y="10" width="250" height="120" fill="#5c85d6" stroke="#1a53a5" stroke-width="2"/>
+            <text x="465" y="75" text-anchor="middle" class="parcela-label-white">Montaje 2</text>
           </g>
 
-          <!-- Puesto de Preparación de Cables 1 -->
-          <g class="puesto-area" data-puesto="Puesto de Preparación de Cables 1">
-            <rect x="400" y="270" width="190" height="55" fill="#f5d742" stroke="#c9a800" stroke-width="2"/>
-            <text x="495" y="303" text-anchor="middle" class="parcela-label-dark">Prep. Cables 1</text>
+          <g class="puesto-area" data-puesto="Puesto de Montaje 1">
+            <rect x="340" y="140" width="250" height="100" fill="#d32f2f" stroke="#8B0000" stroke-width="2"/>
+            <text x="465" y="195" text-anchor="middle" class="parcela-label-white">Montaje 1</text>
           </g>
 
-          <!-- Puesto de Preparación de Cables 2 -->
           <g class="puesto-area" data-puesto="Puesto de Preparación de Cables 2">
-            <rect x="400" y="335" width="190" height="55" fill="#4caf50" stroke="#2e7d32" stroke-width="2"/>
-            <text x="495" y="368" text-anchor="middle" class="parcela-label-white">Prep. Cables 2</text>
+            <rect x="340" y="250" width="250" height="75" fill="#4caf50" stroke="#2e7d32" stroke-width="2"/>
+            <text x="465" y="293" text-anchor="middle" class="parcela-label-white">Prep. Cables 2</text>
           </g>
 
-          <!-- Puesto de Canaleta -->
+          <g class="puesto-area" data-puesto="Puesto de Preparación de Cables 1">
+            <rect x="340" y="335" width="250" height="75" fill="#f5d742" stroke="#c9a800" stroke-width="2"/>
+            <text x="465" y="378" text-anchor="middle" class="parcela-label-dark">Prep. Cables 1</text>
+          </g>
+
           <g class="puesto-area" data-puesto="Puesto de Canaleta">
-            <rect x="10" y="270" width="380" height="120" fill="#ff69b4" stroke="#d63384" stroke-width="2"/>
-            <text x="200" y="335" text-anchor="middle" class="parcela-label-white">Puesto de Canaleta</text>
+            <rect x="340" y="420" width="250" height="70" fill="#ff69b4" stroke="#d63384" stroke-width="2"/>
+            <text x="465" y="460" text-anchor="middle" class="parcela-label-white">Canaletas</text>
           </g>
 
-          <text x="300" y="398" text-anchor="middle" class="leyenda">Haz clic en un puesto para seleccionarlo</text>
+          <text x="300" y="498" text-anchor="middle" class="leyenda">Haz clic en un puesto para seleccionarlo</text>
         </svg>
       </div>
 
