@@ -1346,19 +1346,34 @@ app.get('/api/kpi', async (req, res) => {
 
 // Iniciar servidor
 async function startServer() {
-  try {
-    await initDatabase();
+  // Iniciar el servidor HTTP primero para que el healthcheck responda
+  app.listen(PORT, () => {
+    console.log(`\n========================================`);
+    console.log(`  Servidor de Auditoría 5S GHI`);
+    console.log(`  Puerto: ${PORT}`);
+    console.log(`  Base de datos: PostgreSQL`);
+    console.log(`========================================\n`);
+  });
 
-    app.listen(PORT, () => {
-      console.log(`\n========================================`);
-      console.log(`  Servidor de Auditoría 5S GHI`);
-      console.log(`  Puerto: ${PORT}`);
-      console.log(`  Base de datos: PostgreSQL`);
-      console.log(`========================================\n`);
-    });
-  } catch (error) {
-    console.error('Error al iniciar el servidor:', error);
-    process.exit(1);
+  // Inicializar base de datos con reintentos
+  const MAX_RETRIES = 5;
+  for (let i = 1; i <= MAX_RETRIES; i++) {
+    try {
+      console.log(`Conectando a PostgreSQL (intento ${i}/${MAX_RETRIES})...`);
+      await initDatabase();
+      console.log('Base de datos conectada correctamente');
+      return;
+    } catch (error) {
+      console.error(`Error al conectar a BD (intento ${i}/${MAX_RETRIES}):`, error.message);
+      if (i < MAX_RETRIES) {
+        const wait = i * 2000;
+        console.log(`Reintentando en ${wait / 1000}s...`);
+        await new Promise(r => setTimeout(r, wait));
+      } else {
+        console.error('No se pudo conectar a la base de datos tras todos los reintentos');
+        process.exit(1);
+      }
+    }
   }
 }
 
